@@ -1,0 +1,13 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/nita/dev/c/neural-network/build/cmake_install.cmake",
+		"/home/nita/dev/c/neural-network/build/llama.cpp/cmake_install.cmake",
+		"/home/nita/dev/c/neural-network/build/llama.cpp/ggml/cmake_install.cmake",
+		"/home/nita/dev/c/neural-network/build/llama.cpp/ggml/src/cmake_install.cmake",
+		"/home/nita/dev/c/neural-network/build/llama.cpp/ggml/src/ggml-cpu/cmake_install.cmake",
+		"/home/nita/dev/c/neural-network/build/llama.cpp/ggml/src/ggml-cuda/cmake_install.cmake",
+		"/home/nita/dev/c/neural-network/build/llama.cpp/src/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
