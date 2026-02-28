@@ -12,4 +12,3 @@ cd build
 mv compile_commands.json ../compile_commands.json
 
 ./neuralnetwork
-

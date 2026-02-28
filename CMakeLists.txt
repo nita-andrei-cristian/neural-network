@@ -7,5 +7,4 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/llama.cpp)
 
 add_executable(neuralnetwork ${CMAKE_SOURCE_DIR}/main.c)
 
-target_link_libraries(neuralnetwork PRIVATE  llama ggml)
-
+target_link_libraries(neuralnetwork PRIVATE llama ggml)
