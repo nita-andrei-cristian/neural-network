@@ -1,9 +1,8 @@
-#include <llama.h>
+//#include <llama.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 /*
  * 1. Define nodes
  * 2. Define edges
@@ -12,12 +11,14 @@
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 #define USEGPU 99 // set to 0 if using CPU
+#define NODE_SIZE 16
 
 enum AI_ROLE {
 	TUPPLE_CREATE,
 	CHAT,
 };
 
+/*
 typedef struct{
 	size_t id;	
 	size_t path_length;
@@ -37,10 +38,11 @@ typedef struct{
 
 	enum AI_ROLE role;
 } AI;
+*/
 
 typedef struct {
 	size_t label_length;
-	char label[16];	 // dynamic sizes yet to be implemented
+	char label[NODE_SIZE];	 // dynamic sizes yet to be implemented
 } node;
 
 typedef struct {
@@ -109,7 +111,7 @@ nodes_container* NODES_NEW(){
 	return n;
 }
 
-
+/*
 void AI_SET_PATH(AI* ai, char* path){
 	ai->path_length = strlen(path);
 	ai->path = malloc((ai->path_length + 1) * sizeof(char));
@@ -197,8 +199,12 @@ char* AI_FORMAT_PROMPT(AI* ai, char* user_input)
 	return result;
 }
 
-void AI_RUN(AI* ai, char* message){
+char* AI_RUN(AI* ai, char* message){
 	char* prompt = AI_FORMAT_PROMPT(ai, message);
+	char* output = (char*)malloc(256);
+	size_t output_size = 0;
+	size_t output_capacity = 256;
+
 
 	const int n_prompt = -llama_tokenize(ai->vocab, prompt, strlen(prompt),
 			NULL, 0, true, true);
@@ -208,7 +214,7 @@ void AI_RUN(AI* ai, char* message){
 	if (llama_tokenize(ai->vocab, prompt, strlen(prompt), prompt_tokens,
 				n_prompt, true, true) < 0) {
 		fprintf(stderr, "Error: failed to tokenize the prompt: %s\n", __func__);
-		return;
+		return "";
 	}
 	// in the cpp vesion we dinamically get prompt_tplens size instead of using n_prompt, that might cause problems
 
@@ -223,7 +229,7 @@ void AI_RUN(AI* ai, char* message){
 	if (ai->ctx == NULL) {
 		fprintf(stderr, "Error: failed to create the llama_context: %s\n",
 				__func__);
-		return;
+		return "";
 	}
 
 	struct llama_sampler_chain_params sparams = llama_sampler_chain_default_params();
@@ -243,7 +249,7 @@ void AI_RUN(AI* ai, char* message){
 	if (llama_model_has_encoder(ai->model)) {
 		if (llama_encode(ai->ctx, batch)) {
 			fprintf(stderr, "Error : failed to eval %s\n", __func__);
-			return;
+			return "";
 		}
 
 		llama_token decoder_start_token_id = llama_model_decoder_start_token(ai->model);
@@ -260,7 +266,7 @@ void AI_RUN(AI* ai, char* message){
 		// evaluate the current batch with the transformer model
 		if (llama_decode(ai->ctx, batch)) {
 			fprintf(stderr, "Error : failed to eval: %s\n", __func__);
-			return;
+			return "";
 		}
 
 		n_pos += batch.n_tokens;
@@ -278,11 +284,29 @@ void AI_RUN(AI* ai, char* message){
 			int n =
 				llama_token_to_piece(ai->vocab, new_token_id, buf, sizeof(buf), 0, true);
 
+
 			if (n < 0) {
 				fprintf(stderr, "Error: failed to convert token to piece %s\n",
 						__func__);
-				return;
+				return "";
 			}
+
+			output_size += n;
+			if (output_size >= size_capacity - 1){
+				size_capacity *= 1.5;
+
+				char* tmp = output;
+				output =  realloc(output, size_capacity);
+				if (!output){
+					printf("Error : Memory re-allocation failed. Will not store token %s. \n", new_token_id);
+					output= tmp;
+					return output;
+				}
+
+			}
+
+			// add token to output
+			strcat(output, buf);
 
 			fwrite(buf, 1, (size_t)n, stdout);
 			fflush(stdout);
@@ -291,10 +315,133 @@ void AI_RUN(AI* ai, char* message){
 			batch = llama_batch_get_one(&new_token_id, 1);
 		}
 	}
+
+	printf("Output is %s\n", output);
 	
 	free(prompt);
+	return output;
+}
+*/
+
+char* read_file(char* filename)
+{
+	FILE* f = fopen(filename, "rb");
+	if (!f) {
+		fprintf(stderr, "File %s not found.\n", filename);
+		return NULL;
+	};
+
+	fseek(f, 0, SEEK_END);
+	long size = ftell(f);
+	rewind(f);
+
+	char* buffer = malloc(size + 1);
+	if (!buffer){
+		fclose(f);
+		fprintf(stderr, "Error allocating \"%s\" in a buffer\n", filename);
+		return NULL;
+	}
+
+	fread(buffer, 1, size, f);
+	buffer[size] = '\0';
+
+	fclose(f);
+	return buffer;	
 }
 
+char* AI_RUN_MOCK()
+{
+	return read_file("mock-response.txt");
+}
+
+// note : weird edge case when one of the nodes is actually called 'connections'
+bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, char* response){
+	char *nodes = strstr(response, "\"nodes\"");
+	char *connections = strstr(response, "\"connections\"");
+
+	if (!nodes) {
+		fprintf(stderr, "Error, response has no nodes param %s\n", response);
+		return 0;
+	}
+	if (!connections) {
+		fprintf(stderr, "Error, response has no connections param %s\n", response);
+		return 0;
+	}
+
+	char *nodes_start = strchr(nodes, '[');
+	char *nodes_end = strchr(nodes, ']');
+
+	if (!nodes_start || !nodes_end){
+		fprintf(stderr, "Error : couldn't identify nodes block");
+		return 0;
+	}
+
+	char *node_start;
+	char *node_end;
+	
+	while (true){
+		node_start = strchr(nodes_start, '"');
+		node_end = strchr(node_start + 1, '"');
+
+		if (node_start >= nodes_end) break;
+		if (!node_start || !node_end) break;
+	
+		NODES_ADD(nodes_data, node_start + 1, node_end - node_start - 1);
+
+		nodes_start = node_end + 1;
+	}
+	
+
+	char *connections_start = strchr(connections, '[');
+	if (!connections_start){
+		fprintf(stderr, "Error : couldn't identify nodes block");
+		return 0;
+	}
+	
+	char *token_start;
+	char *token_end;
+	int i = 0;
+	
+	while (i <= 50){
+		
+		if (!connections_start) break;
+
+		token_start = strchr(connections_start + 1, '[');
+		if (!token_start) break;
+		token_end = strchr(token_start + 1, ']');
+
+
+		if (!token_start || !token_end) break;
+		if (token_start > token_end) break;
+
+		char* first_element_start = strchr(token_start + 1, '"');
+		char* first_element_end = strchr(first_element_start + 1, '"');
+
+		char* second_element_start = strchr(first_element_end + 1, '"');
+		char* second_element_end = strchr(second_element_start + 1, '"');
+
+		if (first_element_start && first_element_end && second_element_start && second_element_end){
+			char buf1[16];
+			char buf2[16];
+	
+			memcpy(buf1, first_element_start+1, first_element_end - first_element_start - 1);
+			buf1[first_element_end - first_element_start - 1]  = '\0';
+
+			memcpy(buf2, second_element_start+1, second_element_end - second_element_start - 1);
+			buf2[second_element_end - second_element_start - 1]  = '\0';
+
+			printf("[%s] and [%s]\n", buf1, buf2);
+
+		}
+
+		connections_start = token_end + 1;
+		i++;
+	}
+	
+	
+	return 1;
+}
+	/*
 AI* AI_NEW(size_t id, enum AI_ROLE role, char *path)
 {
 	AI* ai = malloc(sizeof(AI));
@@ -330,26 +477,29 @@ void AI_FREE(AI* ai)
 		free(ai->path);
 	free(ai);
 }
+*/
 
 int main(){
 	char path[] = "/home/nita/dev/cpp/change/models/qwen3-8b-q4.gguf";
 
-	AI* ai = AI_NEW(0, TUPPLE_CREATE, path);
+	//AI* ai = AI_NEW(0, TUPPLE_CREATE, path);
 
 	nodes_container *nodes = NODES_NEW();
 
-	char name[] = "Title";
-	size_t size = strlen(name);
+	//AI_RUN(ai, "I hate when collegues get better grades in coding competitions, I mus tbe better to impress my parents and be able to reproduce as a human. I fear the future.");
+	char* response = AI_RUN_MOCK();
 
-	NODES_ADD(nodes, name, size);
-	
+	ADD_DATA_FROM_RESPONSE(nodes, response);
+
 	node* n = NODES_READ(nodes, 0);
 	printf("Found node : %s\n", n->label);
-
-	AI_RUN(ai, "I hate when collegues get better grades in coding competitions, I mus tbe better to impress my parents and be able to reproduce as a human. I fear the future.");
+	n = NODES_READ(nodes, 1);
+	printf("Found node : %s\n", n->label);
+	n = NODES_READ(nodes, 2);
+	printf("Found node : %s\n", n->label);
 	
 	NODES_FREE(nodes);
-	AI_FREE(ai);
+	//AI_FREE(ai);
 
 	return 0;
 }
