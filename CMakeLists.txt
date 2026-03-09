@@ -3,9 +3,15 @@ project(neuralnetwork)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # for lsp
 
-# add_subdirectory(${CMAKE_SOURCE_DIR}/llama.cpp)
+add_library(utils SHARED ${CMAKE_SOURCE_DIR}/c/lib/utils.c)
+add_library(nodes SHARED ${CMAKE_SOURCE_DIR}/c/lib/nodes.c)
+add_library(connections SHARED ${CMAKE_SOURCE_DIR}/c/lib/connections.c)
 
-add_executable(neuralnetwork ${CMAKE_SOURCE_DIR}/main.c)
+target_include_directories(nodes PUBLIC ${CMAKE_SOURCE_DIR}/c/lib)
+target_include_directories(connections PUBLIC ${CMAKE_SOURCE_DIR}/c/lib)
+target_include_directories(utils PUBLIC ${CMAKE_SOURCE_DIR}/c/lib)
 
-target_link_libraries(neuralnetwork )
+add_executable(neuralnetwork ${CMAKE_SOURCE_DIR}/c/main.c)
+
+target_link_libraries(neuralnetwork PRIVATE nodes connections utils )
 # target_link_libraries(neuralnetwork PRIVATE llama ggml)
