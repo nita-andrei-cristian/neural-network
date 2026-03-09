@@ -18,8 +18,6 @@ enum AI_ROLE {
 	CHAT,
 };
 
-
-
 /*
 typedef struct{
 	size_t id;	
