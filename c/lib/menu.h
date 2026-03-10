@@ -1,0 +1,11 @@
+#ifndef NEURAL_NETWORK_BRAIN_MENU
+#define NEURAL_NETWORK_BRAIN_MENU
+
+void MENU_START();
+
+void MENU_LOOP();
+
+void MENU_END();
+
+
+#endif

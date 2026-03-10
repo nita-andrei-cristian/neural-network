@@ -25,7 +25,10 @@ node* NODES_READ(nodes_container *nodes, size_t i);
 nodes_container* NODES_NEW();
 void NODES_FREE(nodes_container* nodes);
 
-bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, char* response);
+node* SEARCH_NODE_BY_ID(nodes_container *nodes, long id);
+
+node* SEARCH_NODE_BY_LABEL(nodes_container *nodes, const char* label);
+
 
 #endif
 
