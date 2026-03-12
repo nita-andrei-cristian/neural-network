@@ -1,0 +1,11 @@
+{
+  "nodes": ["Emotie", "Creativitate", "Arta", "Creativitate", "Cultura", "Comunicare"],
+  "connections": [
+    ["Emotie", "Creativitate"],
+    ["Creativitate", "Arta"],
+    ["Creativitate", "Arta"],
+    ["Arta", "Cultura"],
+    ["Arta", "Comunicare"],
+    ["Cultura", "Comunicare"]
+  ]
+}

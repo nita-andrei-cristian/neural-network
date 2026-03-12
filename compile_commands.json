@@ -19,6 +19,12 @@
 },
 {
   "directory": "/home/nita/dev/c/neural-network/debug",
+  "command": "/usr/sbin/cc -Dmenu_EXPORTS -I/home/nita/dev/c/neural-network/c/lib -g -fPIC -o CMakeFiles/menu.dir/c/lib/menu.c.o -c /home/nita/dev/c/neural-network/c/lib/menu.c",
+  "file": "/home/nita/dev/c/neural-network/c/lib/menu.c",
+  "output": "/home/nita/dev/c/neural-network/debug/CMakeFiles/menu.dir/c/lib/menu.c.o"
+},
+{
+  "directory": "/home/nita/dev/c/neural-network/debug",
   "command": "/usr/sbin/cc -I/home/nita/dev/c/neural-network/c/lib -g -o CMakeFiles/neuralnetwork.dir/c/main.c.o -c /home/nita/dev/c/neural-network/c/main.c",
   "file": "/home/nita/dev/c/neural-network/c/main.c",
   "output": "/home/nita/dev/c/neural-network/debug/CMakeFiles/neuralnetwork.dir/c/main.c.o"

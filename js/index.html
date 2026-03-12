@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Graph View</title>
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    background: black;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="graph"></canvas>
+
+<script src="./graph.js" >  </script>
+
+<script>
+fetch("./graph.json")
+  .then(r => r.json())
+  .then(data => {
+      initGraph(data);
+  });
+</script>
+
+</body>
+</html>

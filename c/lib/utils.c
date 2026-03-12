@@ -1,4 +1,5 @@
 #include <utils.h>
+#include <connections.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -58,11 +59,19 @@ bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *
 	while (true){
 		node_start = strchr(nodes_start, '"');
 		node_end = strchr(node_start + 1, '"');
+		char buf[NODE_SIZE];
+		size_t len = node_end - node_start - 1;
+		if (len >= 32) len = 31;
+		
+		memcpy(buf, node_start + 1, len);
+		buf[len] = '\0';
 
 		if (node_start >= nodes_end) break;
 		if (!node_start || !node_end) break;
 	
-		NODES_ADD(nodes_data, node_start + 1, node_end - node_start - 1);
+		if (!SEARCH_NODE_BY_LABEL(nodes_data, buf)){
+			NODES_ADD(nodes_data, buf, len);
+		}
 
 		nodes_start = node_end + 1;
 	}
@@ -76,6 +85,7 @@ bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *
 	
 	char *token_start;
 	char *token_end;
+	bool shouldDecay = true;
 	int i = 0;
 	
 	while (i <= 50){
@@ -110,8 +120,11 @@ bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *
 			node* node2 = SEARCH_NODE_BY_LABEL(nodes_data, buf2);
 
 			if (node1 && node2){
-				printf("[%p] and [%p]\n", node1, node2);
-				CONNECTIONS_ADD_FROM_MEMORY(connections_data, node1, node2);
+				//printf("[%p] and [%p]\n", node1, node2);
+				if (!CONNECTIONS_SEARCH_BY_NODES(connections_data, node1->id, node2->id)){
+					CONNECTIONS_ADD_FROM_IDS(connections_data, node1->id, node2->id, shouldDecay);
+					shouldDecay = false;
+				}
 			}
 
 		}
@@ -135,6 +148,7 @@ void EXPORT_GRAPH(nodes_container* nodes, connections_container *connections, co
 	}
 	output[0] = '\0';
 
+
 	strcat(output, "{\n	\"nodes\" : [\n");
 	for (int i = 0; i < nodes->count; i++){
 		char id[16];
@@ -154,14 +168,22 @@ void EXPORT_GRAPH(nodes_container* nodes, connections_container *connections, co
 
 	strcat(output, "	\"connections\" : [\n");
 	for (int i = 0; i < connections->count; i++){
-		char id1[16], id2[16];
-		ltoa(connections->items[i].node1, id1); 
-		ltoa(connections->items[i].node2, id2); 
+		connection target = connections->items[i];
+		if (target.dead) continue;
+		
+		char id1[16], id2[16], intensity[16];
+		ltoa(target.node1, id1); 
+		ltoa(target.node2, id2); 
+		dtoa(target.intensity, intensity, 8); 
 		
 		strcat(output, "		[");
 		strcat(output, id1);
 		strcat(output, ",");
 		strcat(output, id2);
+		strcat(output, ",");
+		strcat(output, intensity);
+
+		printf("Double is %s\n", intensity);
 
 		if (i != connections->count - 1)
 			strcat(output, "],\n");
@@ -253,3 +275,45 @@ on page 60.
      s[i] = '\0';
      reverse(s);
 }  
+
+// This was findable on stack overlflow but I lost it so i head to generate with AI.
+#include <math.h>
+#include <string.h>
+
+void dtoa(double n, char s[], int precision)
+{
+    int i = 0, sign;
+
+    if ((sign = n < 0)) {
+        n = -n;
+    }
+
+    int intPart = (int)n;
+    double fracPart = n - intPart;
+
+    /* convert integer part */
+    do {
+        s[i++] = intPart % 10 + '0';
+    } while ((intPart /= 10) > 0);
+
+    if (sign)
+        s[i++] = '-';
+
+    s[i] = '\0';      // IMPORTANT
+    reverse(s);       // acum strlen merge corect
+
+    i = strlen(s);    // ne mutăm la finalul stringului
+
+    /* add decimal point */
+    s[i++] = '.';
+
+    /* convert fractional part */
+    for (int j = 0; j < precision; j++) {
+        fracPart *= 10;
+        int digit = (int)fracPart;
+        s[i++] = digit + '0';
+        fracPart -= digit;
+    }
+
+    s[i] = '\0';
+}

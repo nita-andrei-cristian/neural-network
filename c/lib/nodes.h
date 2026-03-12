@@ -1,7 +1,7 @@
 #ifndef NODE_LIB
 #define NODE_LIB
 
-#define NODE_SIZE 16
+#define NODE_SIZE 32
 
 #include <stdlib.h>
 #include <math.h>

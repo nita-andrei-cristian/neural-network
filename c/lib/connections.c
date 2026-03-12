@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void CONNECTIONS_ADD_FROM_IDS(connections_container *connections, long node1, long node2){
+void CONNECTIONS_ADD_FROM_IDS(connections_container *connections, long node1, long node2, bool decay){
 	if(connections == NULL){
 		fprintf(stderr, "Error : Skipped adding connection because nodes_container is null.\n");
 		return;
@@ -24,42 +24,30 @@ void CONNECTIONS_ADD_FROM_IDS(connections_container *connections, long node1, lo
 			return;
 		}
 	}
+
+	if (decay) CONNECTIONS_DECAY(connections);
+
 	size_t i = connections->count;
+
 	connections->items[i].node1 = node1;
 	connections->items[i].node2 = node2;
+	connections->items[i].intensity = 1;
+	connections->items[i].dead = false;
+	
 
 	connections->count++;
 }
 
-void CONNECTIONS_ADD_FROM_MEMORY(connections_container *connections, node* node1, node* node2){
-	if(connections == NULL){
-		fprintf(stderr, "Error : Skipped adding connection because nodes_container is null.\n");
-		return;
-	}
-	if (node1 == NULL || node2 == NULL){
-		fprintf(stderr, "Error, one of the nodes is NULL %p, %p", node1, node2);
-		return;
-	}
-		
-	
-	if (connections->count >= connections->capacity){
-		
-		if (connections->capacity == 0) connections->capacity = 256;
-		else connections->capacity *= 2;
-		
-		connection* tmp = connections->items;
-		connections->items = realloc(connections->items, connections->capacity * sizeof(*connections->items));
-		if (!connections->items){
-			printf("Error : Memory re-allocation failed. Will not store item [%d, %d]. \n", node1, node2);
-			connections->items = tmp;
-			return;
+
+connection* CONNECTIONS_SEARCH_BY_NODES(connections_container *connections, long node1, long node2){
+
+	for (int i = 0; i < connections->count; i++){
+		connection target = connections->items[i];
+		if (((target.node1 == node2 && target.node2 == node1) || (target.node1 == node1 && target.node2 == node2)) && !target.dead){
+			return &connections->items[i];
 		}
 	}
-	size_t i = connections->count;
-	connections->items[i].node1 = node1->id;
-	connections->items[i].node2 = node2->id;
-
-	connections->count++;
+	return NULL;
 }
 
 connections_container* CONNECTIONS_NEW(){
@@ -72,7 +60,14 @@ connections_container* CONNECTIONS_NEW(){
 	return n;
 }
 
-
+void CONNECTIONS_DECAY(connections_container *connections){
+	for (int i = 0; i < connections->count; i++){
+		connections->items[i].intensity -= 0.15;
+		if (connections->items[i].intensity <= 0.0){
+			connections->items[i].dead = true;
+		}
+	}
+}
 
 void CONNECTIONS_FREE(connections_container* connections){
 	free(connections->items);

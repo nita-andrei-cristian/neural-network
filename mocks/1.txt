@@ -1,0 +1,12 @@
+{
+  "nodes": ["Curiozitate", "Stiinta", "Tehnologie", "Etica", "Societate"],
+  "connections": [
+    ["Curiozitate", "Stiinta"],
+    ["Curiozitate", "Stiinta"],
+    ["Stiinta", "Tehnologie"],
+    ["Stiinta", "Tehnologie"],
+    ["Tehnologie", "Societate"],
+    ["Tehnologie", "Etica"],
+    ["Etica", "Societate"]
+  ]
+}

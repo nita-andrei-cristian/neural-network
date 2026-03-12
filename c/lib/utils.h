@@ -28,5 +28,6 @@ void EXPORT_GRAPH(nodes_container* nodes, connections_container *connections_dat
 
 void itoa(int n, char s[]);
 void ltoa(long n, char s[]);
+void dtoa(double n, char s[], int precision);
 
 #endif

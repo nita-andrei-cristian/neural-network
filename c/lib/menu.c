@@ -6,7 +6,37 @@
 
 char* AI_RUN_MOCK()
 {
-	return read_file("/home/nita/dev/c/neural-network/mock-response.txt");
+	char filename[128];
+	int file = rand();
+	if (file < 0) file *= -1;
+	file %= 5;
+	
+	sprintf(filename,"/home/nita/dev/c/neural-network/mocks/%d.txt",file);
+	
+	return read_file(filename);
+}
+
+enum INPUT_TYPE PROCESS_INPUT(int recursive){
+	char input[2];
+	scanf("%c", &input);
+
+	input[1] = '\0';
+
+	if (*input == 'q')
+		return QUIT;
+	if (*input == 't')
+		return TEST;
+	if (*input == 'm')
+		return MESSAGE;
+	if (*input == 'e')
+		return EXPORT;
+	if (*input == 'c')
+		return CLEAR;
+	
+	if (recursive < 100)
+		return PROCESS_INPUT(recursive++);
+
+	return INPUT_ERROR;
 }
 
 connections_container *connections;
@@ -30,23 +60,42 @@ void MENU_START(){
 }
 
 void MENU_LOOP(){
-	
-	char input = 'q';
 
-	char* response = AI_RUN_MOCK();
+	printf(R"(
+[m] - write message
+[e] - export graph
+[t] - execute test
+[c] - clear
+[q] - quit
+)");
 
-	ADD_DATA_FROM_RESPONSE(nodes, connections, response);
+	enum INPUT_TYPE input = PROCESS_INPUT(0);
 
-	node* n = NODES_READ(nodes, 0);
-	printf("Found node : %s\n", n->label);
-	n = NODES_READ(nodes, 1);
-	printf("Found node : %s\n", n->label);
-	n = NODES_READ(nodes, 2);
-	printf("Found node : %s\n", n->label);
+	if (input == MESSAGE){
+			char message[1024];
+			fgets(message, 1024, stdin);
+			fflush (stdin);
+			message[1023] = '\0';
+			printf("Sending message %s\n", message);
+			
+			char* response = AI_RUN_MOCK();
 
-	EXPORT_GRAPH(nodes, connections, "/home/nita/dev/c/neural-network/js/graph.json");
-
-	if (input == 'q'){
+			ADD_DATA_FROM_RESPONSE(nodes, connections, response);
+			node* n = NODES_READ(nodes, 0);
+			//printf("Found node : %s\n", n->label);
+	}
+	if (input == EXPORT){
+		printf("\033[H\033[J");
+		printf("Export graph...\n\n");
+		EXPORT_GRAPH(nodes, connections, "/home/nita/dev/c/neural-network/js/graph.json");
+	}
+	if (input == TEST){
+		printf("Test ran!");
+	}
+	if (input == CLEAR){
+		printf("\033[H\033[J");
+	}
+	if (input == QUIT || input == INPUT_ERROR){
 		return;
 	}
 

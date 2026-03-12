@@ -1,0 +1,11 @@
+{
+  "nodes": ["Natura", "Resurse", "Economie", "Resurse", "Politica", "Sustenabilitate"],
+  "connections": [
+    ["Natura", "Resurse"],
+    ["Natura", "Resurse"],
+    ["Resurse", "Economie"],
+    ["Economie", "Politica"],
+    ["Politica", "Sustenabilitate"],
+    ["Economie", "Sustenabilitate"]
+  ]
+}

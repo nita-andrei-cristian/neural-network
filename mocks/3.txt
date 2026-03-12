@@ -1,0 +1,11 @@
+{
+  "nodes": ["Observatie", "Reflectie", "Cunoastere", "Reflectie", "Intelegere", "Intelepciune"],
+  "connections": [
+    ["Observatie", "Reflectie"],
+    ["Observatie", "Reflectie"],
+    ["Reflectie", "Cunoastere"],
+    ["Cunoastere", "Intelegere"],
+    ["Intelegere", "Intelepciune"],
+    ["Reflectie", "Intelegere"]
+  ]
+}
