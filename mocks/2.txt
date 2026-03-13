@@ -6,6 +6,8 @@
     ["Creativitate", "Arta"],
     ["Arta", "Cultura"],
     ["Arta", "Comunicare"],
-    ["Cultura", "Comunicare"]
+    ["Arta", "Introspectie"]
+    ["Cultura", "Comunicare"],
+    ["Cultura", "Introspectie"]
   ]
 }

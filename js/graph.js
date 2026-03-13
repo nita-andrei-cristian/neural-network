@@ -116,7 +116,7 @@ function initGraph(graphData) {
         ctx.translate(offsetX, offsetY);
 
         edges.forEach(e => {
-            const w = 0.6 + e.intensity * 1.5;
+            const w = 0.6 + e.intensity * 4;
 
             // Culoarea gri în funcție de intensitate (0.3 -> slab, 1 -> intens)
             const t = (e.intensity);
@@ -124,11 +124,11 @@ function initGraph(graphData) {
             const alpha = 0.3 + t * 0.7;
 
             ctx.lineWidth = w;
-            ctx.strokeStyle = `rgba(${colorVal},${colorVal},${colorVal},${alpha})`;
+            ctx.strokeStyle = `rgba(${colorVal}, 0, 0, ${alpha})`;
 
             // Glow subtil
             ctx.shadowBlur = 6 * t;
-            ctx.shadowColor = `rgba(255,255,255,${alpha*0.5})`;
+            ctx.shadowColor = `rgba(255,0,0,${alpha*0.7})`;
 
             ctx.beginPath();
             ctx.moveTo(e.a.x, e.a.y);
@@ -139,10 +139,15 @@ function initGraph(graphData) {
         });
 
         nodes.forEach(n => {
-            ctx.fillStyle = "red";
+            ctx.fillStyle = "black";
+	    ctx.strokeStyle = "red";
+	    ctx.shadowBlur = 2;
+	    ctx.shadowColor = "rgba(255,0,0,0.4)";
+	    ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.arc(n.x, n.y, 4, 0, Math.PI*2);
+            ctx.arc(n.x, n.y, 6, 0, Math.PI*2);
             ctx.fill();
+	    ctx.stroke();
 
             ctx.fillStyle = "white";
             ctx.font = "12px sans-serif";

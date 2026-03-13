@@ -5,6 +5,8 @@
     ["Natura", "Resurse"],
     ["Resurse", "Economie"],
     ["Economie", "Politica"],
+    ["Economie", "Societate"],
+    ["Natura", "Societate"],
     ["Politica", "Sustenabilitate"],
     ["Economie", "Sustenabilitate"]
   ]

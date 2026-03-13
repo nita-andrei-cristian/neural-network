@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
+#include <math.h>
 
 char* read_file(char* filename)
 {
@@ -121,9 +122,12 @@ bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *
 
 			if (node1 && node2){
 				//printf("[%p] and [%p]\n", node1, node2);
-				if (!CONNECTIONS_SEARCH_BY_NODES(connections_data, node1->id, node2->id)){
+				connection *target = CONNECTIONS_SEARCH_BY_NODES(connections_data, node1->id, node2->id);
+				if (!target){
 					CONNECTIONS_ADD_FROM_IDS(connections_data, node1->id, node2->id, shouldDecay);
 					shouldDecay = false;
+				}else{
+					target->intensity += 0.1;
 				}
 			}
 
@@ -277,8 +281,6 @@ on page 60.
 }  
 
 // This was findable on stack overlflow but I lost it so i head to generate with AI.
-#include <math.h>
-#include <string.h>
 
 void dtoa(double n, char s[], int precision)
 {

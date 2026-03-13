@@ -6,6 +6,7 @@
     ["Reflectie", "Cunoastere"],
     ["Cunoastere", "Intelegere"],
     ["Intelegere", "Intelepciune"],
+    ["Filozofie", "Intelepciune"],
     ["Reflectie", "Intelegere"]
   ]
 }
