@@ -14,22 +14,6 @@ char* searchFirstDigit(char *source){
 	return NULL;
 }
 
-char* searchFirstDigitWithComma(char *source){
-	char* dest = source;
-	do{
-		if (*dest >= '0' && *dest <= '9' || *dest == '.' || *dest == ',') return dest;
-	}while(*(++dest) != '\0');
-	return NULL;
-}
-
-char* searchFirstNonDigitWithComma(char *source){
-	char* dest = source;
-	do{
-		if ((*dest < '0' || *dest > '9') && *dest != '.' && *dest != ',') return dest;
-	}while(*(++dest) != '\0');
-	return NULL;
-}
-
 char* searchFirstNonDigit(char *source){
 	char* dest = source;
 	do{
@@ -314,6 +298,7 @@ bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *con
 		nodes_start = node_end + 1;
 	}
 
+	printf("test 1\n");
 	char *connections_start = strchr(connections, '[');
 	if (!connections_start){
 		fprintf(stderr, "Error : couldn't identify nodes block");
@@ -324,18 +309,22 @@ bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *con
 	char *token_end;
 	int i = 0;
 	
+	printf("test 2\n");
 	while (i <= 50){
 		
 		if (!connections_start) break;
 
+		printf("test 3\n");
 		token_start = strchr(connections_start + 1, '[');
 		if (!token_start) break;
 		token_end = strchr(token_start + 1, ']');
+		printf("test 4\n");
 
 		if (!token_start || !token_end) break;
 		if (token_start > token_end) break;
+		printf("test 5\n");
 
-		char* first_element_start = searchFirstDigit(token_start);
+		char* first_element_start = searchFirstDigit(first_element_start);
 		if(!first_element_start) break;
 		char* first_element_end = searchFirstNonDigit(first_element_start);
 		if(!first_element_end) break;
@@ -345,29 +334,23 @@ bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *con
 		char* second_element_end = searchFirstNonDigit(second_element_start);
 		if(!second_element_end) break;
 
-		char* third_element_start = searchFirstDigitWithComma(second_element_end);
-		if(!third_element_start) break;
-		char* third_element_end = searchFirstNonDigitWithComma(third_element_start);
-		if(!third_element_end) break;
+		if (first_element_start && first_element_end && second_element_start && second_element_end){
+			char buf1[16];
+			char buf2[16];
 	
-		char buf1[32];
-		char buf2[32];
-		char buf3[32];
+			memcpy(buf1, first_element_start+1, first_element_end - first_element_start - 1);
+			buf1[first_element_end - first_element_start - 1]  = '\0';
 
-		memcpy(buf1, first_element_start, first_element_end - first_element_start);
-		buf1[first_element_end - first_element_start]  = '\0';
-		node* node1 = SEARCH_NODE_BY_ID(nodes_data, atol(buf1));
+			node* node1 = SEARCH_NODE_BY_LABEL(nodes_data, buf1);
+			memcpy(buf2, second_element_start+1, second_element_end - second_element_start - 1);
+			buf2[second_element_end - second_element_start - 1]  = '\0';
 
-		memcpy(buf2, second_element_start, second_element_end - second_element_start);
-		buf2[second_element_end - second_element_start ]  = '\0';
-		node* node2 = SEARCH_NODE_BY_ID(nodes_data, atol(buf2));
+			node* node2 = SEARCH_NODE_BY_LABEL(nodes_data, buf2);
 
-		memcpy(buf3, third_element_start+1, third_element_end - third_element_start - 1);
-		buf3[third_element_end - third_element_start - 1 ]  = '\0';
+			if (node1 && node2){
+				printf("%s, %s", node1, node2);
+			}
 
-		if (node1 && node2){
-			connection* new = CONNECTIONS_ADD_FROM_IDS(connections_data, node1->id, node2->id, false);
-			new->intensity = atod(buf3, strlen(buf3) - 1);
 		}
 
 		connections_start = token_end + 1;
@@ -492,25 +475,4 @@ void dtoa(double n, char s[], int precision)
     }
 
     s[i] = '\0';
-}
-
-double atod(char s[], int precision)
-{
-	double result = 0.0;
-	char* tip = s;
-	double i = 1;
-
-	while (*tip != '\0' && tip < s + precision){
-		if (*tip == '.' || *tip == ',') {
-			tip++;
-			continue;
-		}
-		result = result * 10 + (double)(*tip - '0');
-		tip++;
-		i*=10;
-	}
-
-	if (i == 0) return 0.0;
-
-	return (result / i) * 10;
 }

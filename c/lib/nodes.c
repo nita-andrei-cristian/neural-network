@@ -5,14 +5,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-void NODES_ADD(nodes_container *nodes, const char *label, size_t label_length){
+node* NODES_ADD(nodes_container *nodes, const char *label, size_t label_length){
 	if(nodes == NULL){
 		fprintf(stderr, "Error : Skipped adding node because nodes_container is null.\n");
-		return;
+		return NULL;
 	}
 	if(label == NULL){
 		fprintf(stderr, "Error : Skipped adding node because label is null.\n");
-		return;
+		return NULL;
 	}
 
 	if (nodes->count >= nodes->capacity){
@@ -25,7 +25,7 @@ void NODES_ADD(nodes_container *nodes, const char *label, size_t label_length){
 		if (!nodes->items){
 			printf("Error : Memory re-allocation failed. Will not store item %s. \n", label);
 			nodes->items = tmp;
-			return;
+			return NULL;
 		}
 	}
 
@@ -37,6 +37,8 @@ void NODES_ADD(nodes_container *nodes, const char *label, size_t label_length){
 	nodes->items[i].id = rand();
 
 	nodes->count++;
+
+	return &nodes->items[i];
 }
 
 node* NODES_READ(nodes_container *nodes, size_t i){

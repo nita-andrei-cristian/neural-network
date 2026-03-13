@@ -17,7 +17,7 @@ typedef struct connections_container {
 	connection *items;
 } connections_container;
 
-void CONNECTIONS_ADD_FROM_IDS(connections_container *connections, long node1, long node2, bool shouldDecay);
+connection* CONNECTIONS_ADD_FROM_IDS(connections_container *connections, long node1, long node2, bool shouldDecay);
 
 void CONNECTIONS_FREE(connections_container* connections);
 

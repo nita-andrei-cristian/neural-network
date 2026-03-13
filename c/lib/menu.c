@@ -90,6 +90,7 @@ void MENU_LOOP(){
 		EXPORT_GRAPH(nodes, connections, "/home/nita/dev/c/neural-network/js/graph.json");
 	}
 	if (input == TEST){
+		SET_INCEPTION_GRAPH(nodes, connections, "/home/nita/dev/c/neural-network/inception/0.json");
 		printf("Test ran!");
 	}
 	if (input == CLEAR){

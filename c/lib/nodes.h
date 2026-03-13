@@ -18,7 +18,7 @@ typedef struct node_container {
 	node *items;
 } nodes_container;
 
-void NODES_ADD(nodes_container *nodes, const char *label, size_t label_length);
+node* NODES_ADD(nodes_container *nodes, const char *label, size_t label_length);
 
 node* NODES_READ(nodes_container *nodes, size_t i);
 

@@ -5,10 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-void CONNECTIONS_ADD_FROM_IDS(connections_container *connections, long node1, long node2, bool decay){
+connection* CONNECTIONS_ADD_FROM_IDS(connections_container *connections, long node1, long node2, bool decay){
 	if(connections == NULL){
 		fprintf(stderr, "Error : Skipped adding connection because nodes_container is null.\n");
-		return;
+		return NULL;
 	}
 	
 	if (connections->count >= connections->capacity){
@@ -21,21 +21,23 @@ void CONNECTIONS_ADD_FROM_IDS(connections_container *connections, long node1, lo
 		if (!connections->items){
 			printf("Error : Memory re-allocation failed. Will not store item [%d, %d]. \n", node1, node2);
 			connections->items = tmp;
-			return;
-		}
+			return NULL;
+		} 
 	}
 
 	if (decay) CONNECTIONS_DECAY(connections);
 
 	size_t i = connections->count;
+	connection *new = &connections->items[i];
 
-	connections->items[i].node1 = node1;
-	connections->items[i].node2 = node2;
-	connections->items[i].intensity = 1;
-	connections->items[i].dead = false;
-	
+	new->node1 = node1;
+	new->node2 = node2;
+	new->intensity = 1;
+	new->dead = false;
 
 	connections->count++;
+
+	return new;
 }
 
 
