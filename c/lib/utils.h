@@ -8,22 +8,11 @@ char* read_file(char* filename);
 
 #ifndef ADD_ITEMS_FROM_DATA_FUNC
 #define ADD_ITEMS_FROM_DATA_FUNC
-#include <nodes.h>
-#include <connections.h>
+#include "./neuro-engine/core.h"
 #include <string.h>
 #include <stdlib.h>
 
 bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *connections_data, char* response);
-#endif
-
-#ifndef EXPORT_GRAPH_FUNC
-#define EXPORT_GRAPH_FUNC
-void EXPORT_GRAPH(nodes_container* nodes, connections_container *connections_data, const char* directory);
-#endif
-
-#ifndef INCEPTION_GRAPH
-#define INCEPTION_GRAPH
-bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *connections_data, char* path);
 #endif
 
 #ifndef CONVERSION_FUNCTIONS
@@ -32,4 +21,17 @@ void itoa(int n, char s[]);
 void ltoa(long n, char s[]);
 void dtoa(double n, char s[], int precision);
 double atod(char s[], int precision);
+#endif
+
+#ifndef STRING_SEARCH_FUNCTIONS
+#define STRING_SEARCH_FUNCTIONS
+
+char* searchFirstDigit(char *source);
+
+char* searchFirstDigitWithComma(char *source);
+
+char* searchFirstNonDigitWithComma(char *source);
+
+char* searchFirstNonDigit(char *source);
+
 #endif

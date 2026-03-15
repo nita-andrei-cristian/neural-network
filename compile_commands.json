@@ -7,25 +7,43 @@
 },
 {
   "directory": "/home/nita/dev/c/neural-network/debug",
-  "command": "/usr/sbin/cc -Dnodes_EXPORTS -I/home/nita/dev/c/neural-network/c/lib -g -fPIC -o CMakeFiles/nodes.dir/c/lib/nodes.c.o -c /home/nita/dev/c/neural-network/c/lib/nodes.c",
-  "file": "/home/nita/dev/c/neural-network/c/lib/nodes.c",
-  "output": "/home/nita/dev/c/neural-network/debug/CMakeFiles/nodes.dir/c/lib/nodes.c.o"
-},
-{
-  "directory": "/home/nita/dev/c/neural-network/debug",
-  "command": "/usr/sbin/cc -Dconnections_EXPORTS -I/home/nita/dev/c/neural-network/c/lib -g -fPIC -o CMakeFiles/connections.dir/c/lib/connections.c.o -c /home/nita/dev/c/neural-network/c/lib/connections.c",
-  "file": "/home/nita/dev/c/neural-network/c/lib/connections.c",
-  "output": "/home/nita/dev/c/neural-network/debug/CMakeFiles/connections.dir/c/lib/connections.c.o"
-},
-{
-  "directory": "/home/nita/dev/c/neural-network/debug",
   "command": "/usr/sbin/cc -Dmenu_EXPORTS -I/home/nita/dev/c/neural-network/c/lib -g -fPIC -o CMakeFiles/menu.dir/c/lib/menu.c.o -c /home/nita/dev/c/neural-network/c/lib/menu.c",
   "file": "/home/nita/dev/c/neural-network/c/lib/menu.c",
   "output": "/home/nita/dev/c/neural-network/debug/CMakeFiles/menu.dir/c/lib/menu.c.o"
 },
 {
   "directory": "/home/nita/dev/c/neural-network/debug",
-  "command": "/usr/sbin/cc -I/home/nita/dev/c/neural-network/c/lib -g -o CMakeFiles/neuralnetwork.dir/c/main.c.o -c /home/nita/dev/c/neural-network/c/main.c",
+  "command": "/usr/sbin/cc -Dconnections_EXPORTS -I/home/nita/dev/c/neural-network/c/lib/neuro-engine -g -fPIC -o CMakeFiles/connections.dir/c/lib/neuro-engine/connections.c.o -c /home/nita/dev/c/neural-network/c/lib/neuro-engine/connections.c",
+  "file": "/home/nita/dev/c/neural-network/c/lib/neuro-engine/connections.c",
+  "output": "/home/nita/dev/c/neural-network/debug/CMakeFiles/connections.dir/c/lib/neuro-engine/connections.c.o"
+},
+{
+  "directory": "/home/nita/dev/c/neural-network/debug",
+  "command": "/usr/sbin/cc -Dmemory_EXPORTS -I/home/nita/dev/c/neural-network/c/lib/neuro-engine -g -fPIC -o CMakeFiles/memory.dir/c/lib/neuro-engine/memory.c.o -c /home/nita/dev/c/neural-network/c/lib/neuro-engine/memory.c",
+  "file": "/home/nita/dev/c/neural-network/c/lib/neuro-engine/memory.c",
+  "output": "/home/nita/dev/c/neural-network/debug/CMakeFiles/memory.dir/c/lib/neuro-engine/memory.c.o"
+},
+{
+  "directory": "/home/nita/dev/c/neural-network/debug",
+  "command": "/usr/sbin/cc -Dnodes_EXPORTS -I/home/nita/dev/c/neural-network/c/lib/neuro-engine -g -fPIC -o CMakeFiles/nodes.dir/c/lib/neuro-engine/nodes.c.o -c /home/nita/dev/c/neural-network/c/lib/neuro-engine/nodes.c",
+  "file": "/home/nita/dev/c/neural-network/c/lib/neuro-engine/nodes.c",
+  "output": "/home/nita/dev/c/neural-network/debug/CMakeFiles/nodes.dir/c/lib/neuro-engine/nodes.c.o"
+},
+{
+  "directory": "/home/nita/dev/c/neural-network/debug",
+  "command": "/usr/sbin/cc -Dsearch_EXPORTS -g -fPIC -o CMakeFiles/search.dir/c/lib/neuro-engine/search.c.o -c /home/nita/dev/c/neural-network/c/lib/neuro-engine/search.c",
+  "file": "/home/nita/dev/c/neural-network/c/lib/neuro-engine/search.c",
+  "output": "/home/nita/dev/c/neural-network/debug/CMakeFiles/search.dir/c/lib/neuro-engine/search.c.o"
+},
+{
+  "directory": "/home/nita/dev/c/neural-network/debug",
+  "command": "/usr/sbin/cc -Dcore_EXPORTS -I/home/nita/dev/c/neural-network/c/lib/neuro-engine -I/home/nita/dev/c/neural-network/c/lib -g -fPIC -o CMakeFiles/core.dir/c/lib/neuro-engine/core.c.o -c /home/nita/dev/c/neural-network/c/lib/neuro-engine/core.c",
+  "file": "/home/nita/dev/c/neural-network/c/lib/neuro-engine/core.c",
+  "output": "/home/nita/dev/c/neural-network/debug/CMakeFiles/core.dir/c/lib/neuro-engine/core.c.o"
+},
+{
+  "directory": "/home/nita/dev/c/neural-network/debug",
+  "command": "/usr/sbin/cc -I/home/nita/dev/c/neural-network/c/lib -I/home/nita/dev/c/neural-network/c/lib/neuro-engine -g -o CMakeFiles/neuralnetwork.dir/c/main.c.o -c /home/nita/dev/c/neural-network/c/main.c",
   "file": "/home/nita/dev/c/neural-network/c/main.c",
   "output": "/home/nita/dev/c/neural-network/debug/CMakeFiles/neuralnetwork.dir/c/main.c.o"
 }

@@ -1,7 +1,6 @@
 #include <menu.h>
-#include <nodes.h>
 #include <utils.h>
-#include <connections.h>
+#include "./neuro-engine/core.h"
 #include <stdio.h>
 
 char* AI_RUN_MOCK()
@@ -24,8 +23,16 @@ enum INPUT_TYPE PROCESS_INPUT(int recursive){
 
 	if (*input == 'q')
 		return QUIT;
-	if (*input == 't')
-		return TEST;
+	if (*input == '0')
+		return TEST0;
+	if (*input == '1')
+		return TEST1;
+	if (*input == '2')
+		return TEST2;
+	if (*input == '3')
+		return TEST3;
+	if (*input == '4')
+		return TEST4;
 	if (*input == 'm')
 		return MESSAGE;
 	if (*input == 'e')
@@ -55,6 +62,8 @@ void MENU_START(){
 
 	//AI_RUN(ai, "I hate when collegues get better grades in coding competitions, I mus tbe better to impress my parents and be able to reproduce as a human. I fear the future.");
 	
+	//SET_INCEPTION_GRAPH(nodes, connections, "/home/nita/dev/c/neural-network/inception/0.json");
+
 	MENU_LOOP();
 	MENU_END();
 }
@@ -64,7 +73,7 @@ void MENU_LOOP(){
 	printf(R"(
 [m] - write message
 [e] - export graph
-[t] - execute test
+[0-4] - execute test
 [c] - clear
 [q] - quit
 )");
@@ -89,9 +98,83 @@ void MENU_LOOP(){
 		printf("Export graph...\n\n");
 		EXPORT_GRAPH(nodes, connections, "/home/nita/dev/c/neural-network/js/graph.json");
 	}
-	if (input == TEST){
-		SET_INCEPTION_GRAPH(nodes, connections, "/home/nita/dev/c/neural-network/inception/0.json");
-		printf("Test ran!");
+	if (input == TEST0){
+		int out, i;
+		node** received = GET_IMPORTANT_NODES(nodes, 10, &out);
+		for (i = 0; i < out; i++){
+			printf("[%s], [%f]\n", received[i]->label, received[i]->intensity);
+
+		}
+		free(received);
+		printf("Test 0 ran!");
+	}
+	if (input == TEST1){
+		int out, i;
+		if (nodes->count <= 0){
+			printf("Please introduce a new node before running test 1\n");
+			MENU_LOOP();
+			return;
+		}
+		printf("Searching for most important node...\n");
+		double max_imp = nodes->items[0].intensity;
+		node *most_important_node = &nodes->items[0];
+		for (i = 0; i < nodes->count; i++){
+			if (nodes->items[i].intensity > max_imp){
+				max_imp = nodes->items[i].intensity; 
+				most_important_node = &nodes->items[i];
+			}
+		}
+		printf("\n\nFound [%s]\n\n", most_important_node->label);
+	
+		node** received = GET_IMPORTANT_NEIGHBOURS(connections, most_important_node->id, 100, &out);
+		printf("Finding neighbours...\n");
+		
+		for (i = 0; i < out; i++){
+			printf("[%s], [%f]\n", received[i]->label, received[i]->intensity);
+		}
+		free(received);
+
+		received = GET_IMPORTANT_NEIGHBOURS(connections, most_important_node->id, 50, &out);
+		printf("Finding top 50*/* neighbours...\n");
+		
+		for (i = 0; i < out; i++){
+			printf("[%s], [%f]\n", received[i]->label, received[i]->intensity);
+		}
+		free(received);
+
+		printf("Test 1 ran!");
+	}
+	if (input == TEST2){
+		int out, i;
+		if (nodes->count <= 0){
+			printf("Please introduce a new node before running test 2\n");
+			MENU_LOOP();
+			return;
+		}
+		printf("Searching for most important node...\n");
+		double max_imp = nodes->items[0].intensity;
+		node *most_important_node = &nodes->items[0];
+		for (i = 0; i < nodes->count; i++){
+			if (nodes->items[i].intensity > max_imp){
+				max_imp = nodes->items[i].intensity; 
+				most_important_node = &nodes->items[i];
+			}
+		}
+		printf("\n\nFound [%s]\n\n", most_important_node->label);
+	
+		char* received = COMPUTE_IMPORTANT_NEIGHBOURS_RECURSIVE(connections, most_important_node, 100, 2, &out);
+		printf("Finding neighbours...\n");
+		
+		printf("Result:\n%s\n", received);
+		free(received);
+
+		printf("Test 2 ran!");
+	}
+	if (input == TEST3){
+		printf("Test 3 ran!");
+	}
+	if (input == TEST4){
+		printf("Test 4 ran!");
 	}
 	if (input == CLEAR){
 		printf("\033[H\033[J");

@@ -1,5 +1,5 @@
 #include <nodes.h>
-#include <utils.h>
+#include <../utils.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,6 +35,7 @@ node* NODES_ADD(nodes_container *nodes, const char *label, size_t label_length){
 	nodes->items[i].label_length = label_length;
 	nodes->items[i].label[label_length] = '\0'; 
 	nodes->items[i].id = rand();
+	nodes->items[i].intensity = 1;
 
 	nodes->count++;
 

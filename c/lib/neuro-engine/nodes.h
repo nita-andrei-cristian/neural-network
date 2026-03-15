@@ -7,9 +7,11 @@
 #include <math.h>
 
 typedef struct node {
-	size_t label_length;
 	char label[NODE_SIZE];	 // dynamic sizes yet to be implemented
+	bool dead;
 	long id;
+	size_t label_length;
+	double intensity;
 } node;
 
 typedef struct node_container {

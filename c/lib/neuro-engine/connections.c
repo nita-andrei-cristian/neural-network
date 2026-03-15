@@ -1,11 +1,10 @@
-#include <connections.h>
-#include <nodes.h>
+#include "connections.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-connection* CONNECTIONS_ADD_FROM_IDS(connections_container *connections, long node1, long node2, bool decay){
+connection* CONNECTIONS_ADD_FROM_IDS(connections_container *connections, nodes_container *nodes, long node1, long node2, bool decay){
 	if(connections == NULL){
 		fprintf(stderr, "Error : Skipped adding connection because nodes_container is null.\n");
 		return NULL;
@@ -32,6 +31,8 @@ connection* CONNECTIONS_ADD_FROM_IDS(connections_container *connections, long no
 
 	new->node1 = node1;
 	new->node2 = node2;
+	new->pnode1 = SEARCH_NODE_BY_ID(nodes, node1);
+	new->pnode2 = SEARCH_NODE_BY_ID(nodes, node2);
 	new->intensity = 1;
 	new->dead = false;
 
@@ -64,9 +65,24 @@ connections_container* CONNECTIONS_NEW(){
 
 void CONNECTIONS_DECAY(connections_container *connections){
 	for (int i = 0; i < connections->count; i++){
-		connections->items[i].intensity -= 0.15;
-		if (connections->items[i].intensity <= 0.0){
-			connections->items[i].dead = true;
+		connection *target = &connections->items[i];
+		if (target->dead) continue;
+
+		target->intensity -= 0.05;
+		if (target->pnode1)
+			target->pnode1->intensity -= 0.05;
+		if (target->pnode2)
+			target->pnode2->intensity -= 0.05;
+
+		if (target->intensity <= 0.0){
+			target->dead = true;
+
+			if (target->pnode1->intensity <= 0)
+				target->pnode1->dead = true;
+			if (target->pnode2->intensity <= 0)
+				target->pnode2->dead = true;
+
+			// kill respective nodes
 		}
 	}
 }

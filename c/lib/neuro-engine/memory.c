@@ -1,52 +1,4 @@
-#include <utils.h>
-#include <connections.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stddef.h>
-#include <string.h>
-#include <math.h>
-
-char* searchFirstDigit(char *source){
-	char* dest = source;
-	do{
-		if (*dest >= '0' && *dest <= '9') return dest;
-	}while(*(++dest) != '\0');
-	return NULL;
-}
-
-char* searchFirstNonDigit(char *source){
-	char* dest = source;
-	do{
-		if (*dest < '0' || *dest > '9') return dest;
-	}while(*(++dest) != '\0');
-	return NULL;
-}
-
-char* read_file(char* filename)
-{
-	FILE* f = fopen(filename, "rb");
-	if (!f) {
-		fprintf(stderr, "File %s not found.\n", filename);
-		return NULL;
-	};
-
-	fseek(f, 0, SEEK_END);
-	long size = ftell(f);
-	rewind(f);
-
-	char* buffer = malloc(size + 1);
-	if (!buffer){
-		fclose(f);
-		fprintf(stderr, "Error allocating \"%s\" in a buffer\n", filename);
-		return NULL;
-	}
-
-	fread(buffer, 1, size, f);
-	buffer[size] = '\0';
-
-	fclose(f);
-	return buffer;	
-}
+#include "memory.h"
 
 // note : weird edge case when one of the nodes is actually called 'connections'
 bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *connections_data, char* response){
@@ -140,10 +92,14 @@ bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *
 				//printf("[%p] and [%p]\n", node1, node2);
 				connection *target = CONNECTIONS_SEARCH_BY_NODES(connections_data, node1->id, node2->id);
 				if (!target){
-					CONNECTIONS_ADD_FROM_IDS(connections_data, node1->id, node2->id, shouldDecay);
+					CONNECTIONS_ADD_FROM_IDS(connections_data, nodes_data, node1->id, node2->id, shouldDecay);
 					shouldDecay = false;
 				}else{
 					target->intensity += 0.1;
+					if (target->pnode1)
+						target->pnode1->intensity += 0.1;
+					if (target->pnode2)
+						target->pnode2->intensity += 0.1;
 				}
 			}
 
@@ -171,6 +127,7 @@ void EXPORT_GRAPH(nodes_container* nodes, connections_container *connections, co
 
 	strcat(output, "{\n	\"nodes\" : [\n");
 	for (int i = 0; i < nodes->count; i++){
+		if (nodes->items[i].dead) continue;
 		char id[16];
 		ltoa(nodes->items[i].id, id); 
 		
@@ -298,7 +255,6 @@ bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *con
 		nodes_start = node_end + 1;
 	}
 
-	printf("test 1\n");
 	char *connections_start = strchr(connections, '[');
 	if (!connections_start){
 		fprintf(stderr, "Error : couldn't identify nodes block");
@@ -309,22 +265,18 @@ bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *con
 	char *token_end;
 	int i = 0;
 	
-	printf("test 2\n");
 	while (i <= 50){
 		
 		if (!connections_start) break;
 
-		printf("test 3\n");
 		token_start = strchr(connections_start + 1, '[');
 		if (!token_start) break;
 		token_end = strchr(token_start + 1, ']');
-		printf("test 4\n");
 
 		if (!token_start || !token_end) break;
 		if (token_start > token_end) break;
-		printf("test 5\n");
 
-		char* first_element_start = searchFirstDigit(first_element_start);
+		char* first_element_start = searchFirstDigit(token_start);
 		if(!first_element_start) break;
 		char* first_element_end = searchFirstNonDigit(first_element_start);
 		if(!first_element_end) break;
@@ -334,23 +286,29 @@ bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *con
 		char* second_element_end = searchFirstNonDigit(second_element_start);
 		if(!second_element_end) break;
 
-		if (first_element_start && first_element_end && second_element_start && second_element_end){
-			char buf1[16];
-			char buf2[16];
+		char* third_element_start = searchFirstDigitWithComma(second_element_end);
+		if(!third_element_start) break;
+		char* third_element_end = searchFirstNonDigitWithComma(third_element_start);
+		if(!third_element_end) break;
 	
-			memcpy(buf1, first_element_start+1, first_element_end - first_element_start - 1);
-			buf1[first_element_end - first_element_start - 1]  = '\0';
+		char buf1[32];
+		char buf2[32];
+		char buf3[32];
 
-			node* node1 = SEARCH_NODE_BY_LABEL(nodes_data, buf1);
-			memcpy(buf2, second_element_start+1, second_element_end - second_element_start - 1);
-			buf2[second_element_end - second_element_start - 1]  = '\0';
+		memcpy(buf1, first_element_start, first_element_end - first_element_start);
+		buf1[first_element_end - first_element_start]  = '\0';
+		node* node1 = SEARCH_NODE_BY_ID(nodes_data, atol(buf1));
 
-			node* node2 = SEARCH_NODE_BY_LABEL(nodes_data, buf2);
+		memcpy(buf2, second_element_start, second_element_end - second_element_start);
+		buf2[second_element_end - second_element_start ]  = '\0';
+		node* node2 = SEARCH_NODE_BY_ID(nodes_data, atol(buf2));
 
-			if (node1 && node2){
-				printf("%s, %s", node1, node2);
-			}
+		memcpy(buf3, third_element_start+1, third_element_end - third_element_start - 1);
+		buf3[third_element_end - third_element_start - 1 ]  = '\0';
 
+		if (node1 && node2){
+			connection* new = CONNECTIONS_ADD_FROM_IDS(connections_data, nodes_data, node1->id, node2->id, false);
+			new->intensity = atod(buf3, strlen(buf3) - 1);
 		}
 
 		connections_start = token_end + 1;
@@ -362,117 +320,4 @@ bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *con
 	return 1;
 }
 
-/*
 
-itoa appeared in the first edition of
-Kernighan and Ritchie's
-The C Programming Language, 
-on page 60.
-
-*/
-
-// Source - https://stackoverflow.com/a/29544416
-// Posted by haccks, modified by community. See post 'Timeline' for change history
-// Retrieved 2026-03-09, License - CC BY-SA 3.0
-
- /* reverse:  reverse string s in place */
- void reverse(char s[])
- {
-     int i, j;
-     char c;
-
-     for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
-         c = s[i];
-         s[i] = s[j];
-         s[j] = c;
-     }
-
-}  
-
-// Source - https://stackoverflow.com/a/29544416
-// Posted by haccks, modified by community. See post 'Timeline' for change history
-// Retrieved 2026-03-09, License - CC BY-SA 3.0
-
- /* itoa:  convert n to characters in s */
- void itoa(int n, char s[])
- {
-     int i, sign;
-
-     if ((sign = n) < 0)  /* record sign */
-         n = -n;          /* make n positive */
-     i = 0;
-     do {       /* generate digits in reverse order */
-         s[i++] = n % 10 + '0';   /* get next digit */
-     } while ((n /= 10) > 0);     /* delete it */
-     if (sign < 0)
-         s[i++] = '-';
-     s[i] = '\0';
-     reverse(s);
-}  
-
-/*
-int atoi(char s[]){
-	int n = 0;
-	char* dest = s;
-	while (*dest != '\0' && *dest >= '0' && *dest <= '9'){
-		n *= 10 + *dest - '0';
-	}
-
-	return n;
-}*/
-
- void ltoa(long n, char s[])
- {
-     int i, sign;
-
-     if ((sign = n) < 0)  /* record sign */
-         n = -n;          /* make n positive */
-     i = 0;
-     do {       /* generate digits in reverse order */
-         s[i++] = n % 10 + '0';   /* get next digit */
-     } while ((n /= 10) > 0);     /* delete it */
-     if (sign < 0)
-         s[i++] = '-';
-     s[i] = '\0';
-     reverse(s);
-}  
-
-// This was findable on stack overlflow but I lost it so i head to generate with AI.
-
-void dtoa(double n, char s[], int precision)
-{
-    int i = 0, sign;
-
-    if ((sign = n < 0)) {
-        n = -n;
-    }
-
-    int intPart = (int)n;
-    double fracPart = n - intPart;
-
-    /* convert integer part */
-    do {
-        s[i++] = intPart % 10 + '0';
-    } while ((intPart /= 10) > 0);
-
-    if (sign)
-        s[i++] = '-';
-
-    s[i] = '\0';     
-    reverse(s);       
-
-    i = strlen(s);  
-
-    /* add decimal point */
-    s[i++] = '.';
-
-    /* convert fractional part */
-    for (int j = 0; j < precision; j++) {
-        fracPart *= 10;
-        int digit = (int)fracPart;
-        s[i++] = digit + '0';
-        fracPart -= digit;
-    }
-
-    s[i] = '\0';
-}
