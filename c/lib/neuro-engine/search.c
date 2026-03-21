@@ -1,4 +1,7 @@
 #include "search.h"
+#include "nodes.h"
+#include "connections.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -51,7 +54,7 @@ static inline int top_count_percent(int total, int percent)
     return (total * percent + 99) / 100;
 }
 
-node **GET_IMPORTANT_NODES(nodes_container *nodes, int percent, int *out_count){
+Node **GET_IMPORTANT_NODES(int percent, int *out_count){
 	if (out_count)
 		*out_count = 0;
 
@@ -79,7 +82,7 @@ node **GET_IMPORTANT_NODES(nodes_container *nodes, int percent, int *out_count){
 
 	free(values);
 
-	node **result = malloc((size_t)n * sizeof(*result));
+	Node **result = malloc((size_t)n * sizeof(*result));
 	if (result == NULL)
 		return NULL;
 
@@ -96,18 +99,18 @@ node **GET_IMPORTANT_NODES(nodes_container *nodes, int percent, int *out_count){
 	return result;
 }
 
-static node** GET_NEIGHBOURS(connections_container *connections, long node_id, int *count)
+static Node** GET_NEIGHBOURS(ConnectionsContainer *connections, long node_id, int *count)
 {
 	if (connections == NULL) return NULL;
 	
 	int i, lastIndex;
-	node **found;
+	Node **found;
 
-	found = (node**)malloc(100 * sizeof(node*)); // max 100 items
+	found = (Node**)malloc(100 * sizeof(Node*)); // max 100 items
 
 	lastIndex = 0;
 	for (i = 0; i < connections->count && lastIndex < 100; i++){
-		connection* target = &connections->items[i];
+		Connection* target = &connections->items[i];
 		if (target->node1 == node_id && target->pnode2 != NULL){
 			found[lastIndex++] = target->pnode2;
 		}else if(target->node2 == node_id && target->pnode1 != NULL){
@@ -118,11 +121,11 @@ static node** GET_NEIGHBOURS(connections_container *connections, long node_id, i
 	if (lastIndex >= 100) lastIndex = 99;
 	*count = lastIndex;
 
-	return (node**)found;
+	return (Node**)found;
 }
 
-node** GET_IMPORTANT_NEIGHBOURS(connections_container *connections, long node_id, int percent, int *count){
-	node** found;
+Node** GET_IMPORTANT_NEIGHBOURS(long node_id, int percent, int *count){
+	Node** found;
 
 	if (count)
 		*count = 0;
@@ -158,7 +161,7 @@ node** GET_IMPORTANT_NEIGHBOURS(connections_container *connections, long node_id
 	free(values);
 
 	// filtered neighbours
-	node **result = malloc((size_t)n * sizeof(*result));
+	Node **result = malloc((size_t)n * sizeof(*result));
 	if (result == NULL)
 		return NULL;
 
@@ -169,15 +172,15 @@ node** GET_IMPORTANT_NEIGHBOURS(connections_container *connections, long node_id
 			result[(*count)++] = found[i];
 		}
 	}
-	*count--;
+	(*count)--;
 
 	return found;
 }
 
-static char* recursive_call_neighbours(connections_container *connections, char* result, node* root, int percent, int depth){
+static void recursive_call_neighbours(ConnectionsContainer *connections, char* result, Node* root, int percent, int depth){
 	int count;
-	node** found;
-	found = GET_IMPORTANT_NEIGHBOURS(connections, root->id, percent, &count);
+	Node** found;
+	found = GET_IMPORTANT_NEIGHBOURS(root->id, percent, &count);
 
 	strcat(result, "[Name: \"");
 	strcat(result, root->label);
@@ -199,9 +202,9 @@ static char* recursive_call_neighbours(connections_container *connections, char*
 	strcat(result, "]\n]");
 
 	free(found);
-}
+ }
 
-char* COMPUTE_IMPORTANT_NEIGHBOURS_RECURSIVE(connections_container *connections, node *root, int percent, int recursive, int *count){
+char* COMPUTE_IMPORTANT_NEIGHBOURS_RECURSIVE(Node *root, int percent, int recursive, int *count){
 	
 	if (recursive > 5) recursive = 5;
 	if (recursive < 1) recursive = 1;

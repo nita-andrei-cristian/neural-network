@@ -2,9 +2,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "nodes.h"
+
+#include "../utils.h"
+#include "connections.h"
 
 // note : weird edge case when one of the nodes is actually called 'connections'
-_Bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *connections_data, char* response){
+_Bool ADD_DATA_FROM_RESPONSE(char* response){
 	char *nodes = strstr(response, "\"nodes\"");
 	char *connections = strstr(response, "\"connections\"");
 
@@ -41,8 +45,8 @@ _Bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container 
 		if (node_start >= nodes_end) break;
 		if (!node_start || !node_end) break;
 	
-		if (!SEARCH_NODE_BY_LABEL(nodes_data, buf)){
-			NODES_ADD(nodes_data, buf, len);
+		if (!SEARCH_NODE_BY_LABEL(buf)){
+			NODES_ADD(buf, len);
 		}
 
 		nodes_start = node_end + 1;
@@ -85,17 +89,17 @@ _Bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container 
 			memcpy(buf1, first_element_start+1, first_element_end - first_element_start - 1);
 			buf1[first_element_end - first_element_start - 1]  = '\0';
 
-			node* node1 = SEARCH_NODE_BY_LABEL(nodes_data, buf1);
+			Node* node1 = SEARCH_NODE_BY_LABEL(buf1);
 			memcpy(buf2, second_element_start+1, second_element_end - second_element_start - 1);
 			buf2[second_element_end - second_element_start - 1]  = '\0';
 
-			node* node2 = SEARCH_NODE_BY_LABEL(nodes_data, buf2);
+			Node* node2 = SEARCH_NODE_BY_LABEL(buf2);
 
 			if (node1 && node2){
 				//printf("[%p] and [%p]\n", node1, node2);
-				connection *target = CONNECTIONS_SEARCH_BY_NODES(connections_data, node1->id, node2->id);
+				Connection *target = CONNECTIONS_SEARCH_BY_NODES(node1->id, node2->id);
 				if (!target){
-					CONNECTIONS_ADD_FROM_IDS(connections_data, nodes_data, node1->id, node2->id, shouldDecay);
+					CONNECTIONS_ADD_FROM_IDS(node1->id, node2->id, shouldDecay);
 					shouldDecay = 0;
 				}else{
 					target->intensity += 0.1;
@@ -116,10 +120,10 @@ _Bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container 
 	return 1;
 }
 
-void EXPORT_GRAPH(nodes_container* nodes, connections_container *connections, const char* directory){
+void EXPORT_GRAPH(const char* directory){
 
 	// shity size estimation
-	int size = (nodes->count * sizeof(node) + connections->count * sizeof(connection)) * 1.2 + 128;
+	int size = (nodes->count * sizeof(Node) + connections->count * sizeof(Connection)) * 1.2 + 128;
 	char* output = (char*)malloc(size);
 	if(output == NULL){
 		fprintf(stderr, "Error : Couldn't allocate output\n");
@@ -148,7 +152,7 @@ void EXPORT_GRAPH(nodes_container* nodes, connections_container *connections, co
 
 	strcat(output, "	\"connections\" : [\n");
 	for (int i = 0; i < connections->count; i++){
-		connection target = connections->items[i];
+		Connection target = connections->items[i];
 		if (target.dead) continue;
 		
 		char id1[16], id2[16], intensity[16];
@@ -190,23 +194,23 @@ void EXPORT_GRAPH(nodes_container* nodes, connections_container *connections, co
      	free(output);
 };
 
-_Bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *connections_data, char* path){
+_Bool SET_INCEPTION_GRAPH(char* path){
 	char* response = read_file(path);
 	
-	char *nodes = strstr(response, "\"nodes\"");
-	char *connections = strstr(response, "\"connections\"");
+	char *nodes_str = strstr(response, "\"nodes\"");
+	char *connections_str = strstr(response, "\"connections\"");
 
-	if (!nodes) {
+	if (!nodes_str) {
 		fprintf(stderr, "Error, response has no nodes param %s\n", response);
 		return 0;
 	}
-	if (!connections) {
+	if (!connections_str) {
 		fprintf(stderr, "Error, response has no connections param %s\n", response);
 		return 0;
 	}
 
-	char *nodes_start = strchr(nodes, '[');
-	char *nodes_end = strchr(nodes, ']');
+	char *nodes_start = strchr(nodes_str, '[');
+	char *nodes_end = strchr(nodes_str, ']');
 
 	if (!nodes_start || !nodes_end){
 		fprintf(stderr, "Error : couldn't identify nodes block");
@@ -249,8 +253,8 @@ _Bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *co
 		memcpy(id_data, id_start, len);
 		id_data[len] = '\0';
 
-		if (!SEARCH_NODE_BY_LABEL(nodes_data, label_data)){
-			node* new = NODES_ADD(nodes_data, label_data, label_end - label_start - 1);
+		if (!SEARCH_NODE_BY_LABEL(label_data)){
+			Node* new = NODES_ADD(label_data, label_end - label_start - 1);
 			new->id = atol(id_data);
 		}
 
@@ -258,7 +262,7 @@ _Bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *co
 		nodes_start = node_end + 1;
 	}
 
-	char *connections_start = strchr(connections, '[');
+	char *connections_start = strchr(connections_str, '[');
 	if (!connections_start){
 		fprintf(stderr, "Error : couldn't identify nodes block");
 		return 0;
@@ -300,17 +304,17 @@ _Bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *co
 
 		memcpy(buf1, first_element_start, first_element_end - first_element_start);
 		buf1[first_element_end - first_element_start]  = '\0';
-		node* node1 = SEARCH_NODE_BY_ID(nodes_data, atol(buf1));
+		Node* node1 = SEARCH_NODE_BY_ID(atol(buf1));
 
 		memcpy(buf2, second_element_start, second_element_end - second_element_start);
 		buf2[second_element_end - second_element_start ]  = '\0';
-		node* node2 = SEARCH_NODE_BY_ID(nodes_data, atol(buf2));
+		Node* node2 = SEARCH_NODE_BY_ID(atol(buf2));
 
 		memcpy(buf3, third_element_start+1, third_element_end - third_element_start - 1);
 		buf3[third_element_end - third_element_start - 1 ]  = '\0';
 
 		if (node1 && node2){
-			connection* new = CONNECTIONS_ADD_FROM_IDS(connections_data, nodes_data, node1->id, node2->id, 0);
+			Connection* new = CONNECTIONS_ADD_FROM_IDS(node1->id, node2->id, 0);
 			new->intensity = atod(buf3, strlen(buf3) - 1);
 		}
 

@@ -6,14 +6,6 @@
 char* read_file(char* filename);
 #endif
 
-#ifndef ADD_ITEMS_FROM_DATA_FUNC
-#define ADD_ITEMS_FROM_DATA_FUNC
-#include "./neuro-engine/nodes.h"
-#include "./neuro-engine/connections.h"
-
-_Bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *connections_data, char* response);
-#endif
-
 #ifndef CONVERSION_FUNCTIONS
 #define CONVERSION_FUNCTIONS
 void itoa(int n, char s[]);

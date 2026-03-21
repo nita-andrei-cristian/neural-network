@@ -140,7 +140,7 @@ struct CmdSchema{
 	void* params[MAX_SCHEMA_PARAMS]; // up to ten parameters
 };
 
-char* ENGINE_BEGIN_TASK(struct Task *task, nodes_container *nodes, connections_container *connections);
+char* ENGINE_BEGIN_TASK(struct Task *task, NodesContainer *nodes, ConnectionsContainer *connections);
 void ENGINE_EXECUTE_STEP(struct Task *task, char* context, size_t context_size, unsigned short depth);
 
 struct Task *CREATE_MOCK_TASK();

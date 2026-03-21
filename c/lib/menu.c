@@ -50,9 +50,6 @@ enum INPUT_TYPE PROCESS_INPUT(int recursive){
 	return INPUT_ERROR;
 }
 
-connections_container *connections;
-nodes_container *nodes;
-
 void MENU_START(){
 	
 	printf("Session Started...\n\n");
@@ -61,8 +58,8 @@ void MENU_START(){
 
 	//AI* ai = AI_NEW(0, TUPPLE_CREATE, path);
 
-	nodes = NODES_NEW();
-	connections = CONNECTIONS_NEW();
+	NODES_NEW();
+	CONNECTIONS_NEW();
 
 	//AI_RUN(ai, "I hate when collegues get better grades in coding competitions, I mus tbe better to impress my parents and be able to reproduce as a human. I fear the future.");
 	
@@ -93,18 +90,16 @@ void MENU_LOOP(){
 			
 			char* response = AI_RUN_MOCK();
 
-			ADD_DATA_FROM_RESPONSE(nodes, connections, response);
-			node* n = NODES_READ(nodes, 0);
-			//printf("Found node : %s\n", n->label);
+			ADD_DATA_FROM_RESPONSE(response);
 	}
 	if (input == EXPORT){
 		printf("\033[H\033[J");
 		printf("Export graph...\n\n");
-		EXPORT_GRAPH(nodes, connections, "/home/nita/dev/c/neural-network/js/graph.json");
+		EXPORT_GRAPH("/home/nita/dev/c/neural-network/js/graph.json");
 	}
 	if (input == TEST0){
 		int out, i;
-		node** received = GET_IMPORTANT_NODES(nodes, 10, &out);
+		Node** received = GET_IMPORTANT_NODES(10, &out);
 		for (i = 0; i < out; i++){
 			printf("[%s], [%f]\n", received[i]->label, received[i]->intensity);
 		}
@@ -120,7 +115,7 @@ void MENU_LOOP(){
 		}
 		printf("Searching for most important node...\n");
 		double max_imp = nodes->items[0].intensity;
-		node *most_important_node = &nodes->items[0];
+		Node *most_important_node = &nodes->items[0];
 		for (i = 0; i < nodes->count; i++){
 			if (nodes->items[i].intensity > max_imp){
 				max_imp = nodes->items[i].intensity; 
@@ -129,7 +124,7 @@ void MENU_LOOP(){
 		}
 		printf("\n\nFound [%s]\n\n", most_important_node->label);
 	
-		node** received = GET_IMPORTANT_NEIGHBOURS(connections, most_important_node->id, 100, &out);
+		Node** received = GET_IMPORTANT_NEIGHBOURS(most_important_node->id, 100, &out);
 		printf("Finding neighbours...\n");
 		
 		for (i = 0; i < out; i++){
@@ -137,7 +132,7 @@ void MENU_LOOP(){
 		}
 		free(received);
 
-		received = GET_IMPORTANT_NEIGHBOURS(connections, most_important_node->id, 50, &out);
+		received = GET_IMPORTANT_NEIGHBOURS(most_important_node->id, 50, &out);
 		printf("Finding top 50*/* neighbours...\n");
 		
 		for (i = 0; i < out; i++){
@@ -156,7 +151,7 @@ void MENU_LOOP(){
 		}
 		printf("Searching for most important node...\n");
 		double max_imp = nodes->items[0].intensity;
-		node *most_important_node = &nodes->items[0];
+		Node *most_important_node = &nodes->items[0];
 		for (i = 0; i < nodes->count; i++){
 			if (nodes->items[i].intensity > max_imp){
 				max_imp = nodes->items[i].intensity; 
@@ -165,7 +160,7 @@ void MENU_LOOP(){
 		}
 		printf("\n\nFound [%s]\n\n", most_important_node->label);
 	
-		char* received = COMPUTE_IMPORTANT_NEIGHBOURS_RECURSIVE(connections, most_important_node, 100, 2, &out);
+		char* received = COMPUTE_IMPORTANT_NEIGHBOURS_RECURSIVE(most_important_node, 100, 2, &out);
 		printf("Finding neighbours...\n");
 		
 		printf("Result:\n%s\n", received);
@@ -203,7 +198,7 @@ void MENU_LOOP(){
 void MENU_END(){
 	printf("Session ended.\n");
 
-	NODES_FREE(nodes);
-	CONNECTIONS_FREE(connections);
+	NODES_FREE();
+	CONNECTIONS_FREE();
 	//AI_FREE(ai);
 }

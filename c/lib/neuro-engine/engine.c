@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../utils.h"
+#include "neuro-engine/nodes.h"
 
 static char* CREATE_MOCK_RESPONSE(){
 
@@ -53,7 +54,7 @@ static inline size_t ADD_TO_CONTEXT(char* context, size_t size, char* target){
 	return new_capacity;
 }
 	
-char* ENGINE_BEGIN_TASK(struct Task *task, nodes_container *nodes, connections_container *connections){
+char* ENGINE_BEGIN_TASK(struct Task *task, NodesContainer *nodes, ConnectionsContainer *connections){
 	size_t context_size = INIT_CONTEXT_SIZE;
 	char* context = (char*)malloc(context_size);	
 	if (!context){

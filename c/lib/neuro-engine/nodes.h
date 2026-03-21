@@ -4,7 +4,6 @@
 #define NODE_SIZE 32
 
 #include <stdlib.h>
-#include <math.h>
 
 typedef struct node {
 	char label[NODE_SIZE];	 // dynamic sizes yet to be implemented
@@ -12,24 +11,26 @@ typedef struct node {
 	long id;
 	size_t label_length;
 	double intensity;
-} node;
+} Node;
 
-typedef struct node_container {
+typedef struct NodesContainer {
 	size_t capacity;
 	size_t count;
-	node *items;
-} nodes_container;
+	Node *items;
+} NodesContainer;
 
-node* NODES_ADD(nodes_container *nodes, const char *label, size_t label_length);
+struct NodesContainer* nodes; 
 
-node* NODES_READ(nodes_container *nodes, size_t i);
+Node* NODES_ADD(const char *label, size_t label_length);
 
-nodes_container* NODES_NEW();
-void NODES_FREE(nodes_container* nodes);
+Node* NODES_READ(size_t i);
 
-node* SEARCH_NODE_BY_ID(nodes_container *nodes, long id);
+void NODES_NEW();
+void NODES_FREE();
 
-node* SEARCH_NODE_BY_LABEL(nodes_container *nodes, const char* label);
+Node* SEARCH_NODE_BY_ID(long id);
+
+Node* SEARCH_NODE_BY_LABEL(const char* label);
 
 
 #endif
