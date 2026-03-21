@@ -1,8 +1,9 @@
 #include "engine.h"
 #include <stdlib.h>
 #include <string.h>
-#include "../utils.h"
+#include "utils.h"
 #include "neuro-engine/nodes.h"
+#include "neuro-engine/search.h"
 
 static char* CREATE_MOCK_RESPONSE(){
 
@@ -32,12 +33,12 @@ static void free_schema(struct CmdSchema *in){
 	free(in);
 }
 
-static inline size_t ADD_TO_CONTEXT(char* context, size_t size, char* target){
-	if (target == NULL) return size;
+static inline void ADD_TO_CONTEXT(char* context, size_t *size, char* target){
+	if (target == NULL) return;
 
 	size_t sum = strlen(context) + strlen(target);
-	size_t new_capacity = size * 2;
-	if (sum >= size){
+	size_t new_capacity = *size * 2;
+	if (sum >= *size){
 		char* tmp = context;
 		while (new_capacity <= sum){
 			new_capacity *= 2;
@@ -45,13 +46,12 @@ static inline size_t ADD_TO_CONTEXT(char* context, size_t size, char* target){
 		context = (char*)realloc(context, new_capacity);
 		
 		if (!context){
-			fprintf(stderr, "Couldn't allocate memory for context, current size : [%zu], target size : [%zu]\n", size, new_capacity);
+			fprintf(stderr, "Couldn't allocate memory for context, current size : [%zu], target size : [%zu]\n", *size, new_capacity);
 			context = tmp;
-			return size;
+			return;
 		}
 	}
 	strcat(context, target);
-	return new_capacity;
 }
 	
 char* ENGINE_BEGIN_TASK(struct Task *task){
@@ -85,18 +85,9 @@ char* ENGINE_BEGIN_TASK(struct Task *task){
 	strcat(task_data, nConnections);
 	strcat(task_data, " connections.\n\n");
 		
-	context_size = ADD_TO_CONTEXT(context, context_size, task_data);
-	context_size = ADD_TO_CONTEXT(context, context_size, startpoint);
-
-	context_size = ADD_TO_CONTEXT(context, context_size, "\nYOUR COMMAND HISTORY:\n");
-
-	// 0.5 Create mock responses
-	
-	// 1. send message to AI
-
-	// 1.5 process commands (1,2,3)
-
-	// 2. detect error and redirect to AI (including new limit off course)
+	ADD_TO_CONTEXT(context, &context_size, task_data);
+	ADD_TO_CONTEXT(context, &context_size, startpoint);
+	ADD_TO_CONTEXT(context, &context_size, "\nYOUR COMMAND HISTORY:\n");
 
 	ENGINE_EXECUTE_STEP(task, context, INIT_CONTEXT_SIZE, 0);
 
@@ -184,7 +175,29 @@ static struct CmdSchema *PARSE_JSON_RESPONSE(char* json, char* errorMessage){
 }
 
 char* ENGINE_RUN_CMD(struct CmdSchema* cmd){
-	return "Hey";
+	char* out = malloc(1000);
+	int percentage = *(int*)cmd->params[0];
+	out[0] = '\0';
+	strcat(out, "Nodes : Top ");
+	char buffP[16];
+	itoa(percentage, buffP);
+
+	strcat(out, buffP);
+	strcat(out, "%\n");
+	sprintf(out, "Top %d/ percent nodes are:", percentage);
+	if (cmd->command[0] == '1' && cmd->params[0] != NULL){
+		int size;
+		Node** received = GET_IMPORTANT_NODES(percentage, &size);
+		for (int i = 0; i < size; i++){
+			char buff[32];
+			dtoa(received[i]->intensity, buff, 10);
+			strcat(out, received[i]->label);
+			strcat(out, " : (intensity) ");
+			strcat(out, buff);
+			strcat(out, "\n");
+		}
+	}
+	return out;
 }
 
 void ENGINE_EXECUTE_STEP(struct Task *task, char* context, size_t context_size, unsigned short depth){
@@ -194,9 +207,9 @@ void ENGINE_EXECUTE_STEP(struct Task *task, char* context, size_t context_size, 
 	char roundStr[4];
 	itoa(depth, roundStr);
 
-	context_size = ADD_TO_CONTEXT(context, context_size, "\nRound ");
-	context_size = ADD_TO_CONTEXT(context, context_size, roundStr);
-	context_size = ADD_TO_CONTEXT(context, context_size, " :\n");
+	ADD_TO_CONTEXT(context, &context_size, "\nRound ");
+	ADD_TO_CONTEXT(context, &context_size, roundStr);
+	ADD_TO_CONTEXT(context, &context_size, " :\n");
 
 	// MOCK RESPONSE
 	char* response = CREATE_MOCK_RESPONSE();
@@ -210,21 +223,25 @@ void ENGINE_EXECUTE_STEP(struct Task *task, char* context, size_t context_size, 
 		if (schema->finished){
 			free_schema(schema);
 			if (depth >= task->minDepth){
-				context_size = ADD_TO_CONTEXT(context, context_size, "Finished here");
+				ADD_TO_CONTEXT(context, &context_size, "Finished here");
 				return;
 			}else{
-				context_size = ADD_TO_CONTEXT(context, context_size, "AI model tried to finish here, but the task minimum depth is bigger, see above\n");
+				ADD_TO_CONTEXT(context, &context_size, "AI model tried to finish here, but the task minimum depth is bigger, see above\n");
 			}
 		}else{
-			context_size = ADD_TO_CONTEXT(context, context_size, "AI model executed: ");
-			context_size = ADD_TO_CONTEXT(context, context_size, schema->command);
-			ENGINE_RUN_CMD(schema);
+			ADD_TO_CONTEXT(context, &context_size, "AI model executed: ");
+			ADD_TO_CONTEXT(context, &context_size, schema->command);
+			char* out = ENGINE_RUN_CMD(schema);
+			ADD_TO_CONTEXT(context, &context_size, "\nOutput: ");
+			ADD_TO_CONTEXT(context, &context_size, out);
+			if(out)
+				free(out);
 			//context_size = ADD_TO_CONTEXT(context, context_size, response);
 		}
 	}else{
 		fprintf(stderr, "Error : %s", errorMessage);	
-		context_size = ADD_TO_CONTEXT(context, context_size, "encounted an error : ");
-		context_size = ADD_TO_CONTEXT(context, context_size, errorMessage);
+		ADD_TO_CONTEXT(context, &context_size, "encounted an error : ");
+	 	ADD_TO_CONTEXT(context, &context_size, errorMessage);
 	}
 
 	if (response) free(response);
