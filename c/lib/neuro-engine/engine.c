@@ -5,7 +5,7 @@
 #include "neuro-engine/nodes.h"
 #include "neuro-engine/search.h"
 
-static char* CREATE_MOCK_RESPONSE(){
+static char* make_mock_response(){
 
 	char filename[128];
 	unsigned int file = rand();
@@ -15,6 +15,21 @@ static char* CREATE_MOCK_RESPONSE(){
 	sprintf(filename,"/home/nita/dev/c/neural-network/mocks/action-data/%d.json",file);
 
 	return read_file(filename);
+}
+
+struct Task *make_mock_task(){
+	char *mock = "Create a user mission!\n\0";
+	struct Task *task = (struct Task*)malloc(sizeof(struct Task) + strlen(mock));
+
+	task->payload = (char*)malloc(strlen(mock));
+	memcpy(task->payload, mock, strlen(mock));
+	task->minDepth = 7;
+	task->maxDepth = 10;
+
+	printf("Task was generated\n");
+	printf("%s\n", task->payload);
+
+	return task;
 }
 
 static struct CmdSchema *make_schema(){
@@ -33,7 +48,7 @@ static void free_schema(struct CmdSchema *in){
 	free(in);
 }
 
-static inline void ADD_TO_CONTEXT(char* context, size_t *size, char* target){
+static inline void add_context(char* context, size_t *size, char* target){
 	if (target == NULL) return;
 
 	size_t sum = strlen(context) + strlen(target);
@@ -53,8 +68,35 @@ static inline void ADD_TO_CONTEXT(char* context, size_t *size, char* target){
 	}
 	strcat(context, target);
 }
+
+static char* run_cmd(struct CmdSchema* cmd){
+	char* out = malloc(1000);
+	int percentage = *(int*)cmd->params[0];
+	out[0] = '\0';
+	strcat(out, "Nodes : Top ");
+	char buffP[16];
+	itoa(percentage, buffP);
+
+	strcat(out, buffP);
+	strcat(out, "%\n");
+	sprintf(out, "Top %d/ percent nodes are:", percentage);
+	if (cmd->command[0] == '1' && cmd->params[0] != NULL){
+		int size;
+		Node** received = GET_IMPORTANT_NODES(percentage, &size);
+		for (int i = 0; i < size; i++){
+			char buff[32];
+			dtoa(received[i]->intensity, buff, 10);
+			strcat(out, received[i]->label);
+			strcat(out, " : (intensity) ");
+			strcat(out, buff);
+			strcat(out, "\n");
+		}
+	}
+	return out;
+}
+
 	
-char* ENGINE_BEGIN_TASK(struct Task *task){
+char* engine_start_task(struct Task *task){
 	size_t context_size = INIT_CONTEXT_SIZE;
 	char* context = (char*)malloc(context_size);	
 	if (!context){
@@ -85,16 +127,16 @@ char* ENGINE_BEGIN_TASK(struct Task *task){
 	strcat(task_data, nConnections);
 	strcat(task_data, " connections.\n\n");
 		
-	ADD_TO_CONTEXT(context, &context_size, task_data);
-	ADD_TO_CONTEXT(context, &context_size, startpoint);
-	ADD_TO_CONTEXT(context, &context_size, "\nYOUR COMMAND HISTORY:\n");
+	add_context(context, &context_size, task_data);
+	add_context(context, &context_size, startpoint);
+	add_context(context, &context_size, "\nYOUR COMMAND HISTORY:\n");
 
-	ENGINE_EXECUTE_STEP(task, context, INIT_CONTEXT_SIZE, 0);
+	engine_execute_step(task, context, INIT_CONTEXT_SIZE, 0);
 
 	return context;
 }
 
-static struct CmdSchema *PARSE_JSON_RESPONSE(char* json, char* errorMessage){
+static struct CmdSchema *parse_response_json(char* json, char* errorMessage){
 	// sanitize inputs
 	if (json == NULL){
 		strcpy(errorMessage, "Response is null!\n\0");
@@ -174,93 +216,53 @@ static struct CmdSchema *PARSE_JSON_RESPONSE(char* json, char* errorMessage){
 	return out;
 }
 
-char* ENGINE_RUN_CMD(struct CmdSchema* cmd){
-	char* out = malloc(1000);
-	int percentage = *(int*)cmd->params[0];
-	out[0] = '\0';
-	strcat(out, "Nodes : Top ");
-	char buffP[16];
-	itoa(percentage, buffP);
-
-	strcat(out, buffP);
-	strcat(out, "%\n");
-	sprintf(out, "Top %d/ percent nodes are:", percentage);
-	if (cmd->command[0] == '1' && cmd->params[0] != NULL){
-		int size;
-		Node** received = GET_IMPORTANT_NODES(percentage, &size);
-		for (int i = 0; i < size; i++){
-			char buff[32];
-			dtoa(received[i]->intensity, buff, 10);
-			strcat(out, received[i]->label);
-			strcat(out, " : (intensity) ");
-			strcat(out, buff);
-			strcat(out, "\n");
-		}
-	}
-	return out;
-}
-
-void ENGINE_EXECUTE_STEP(struct Task *task, char* context, size_t context_size, unsigned short depth){
+void engine_execute_step(struct Task *task, char* context, size_t context_size, unsigned short depth){
 
 	if (depth >= task->maxDepth) return;
 
 	char roundStr[4];
 	itoa(depth, roundStr);
 
-	ADD_TO_CONTEXT(context, &context_size, "\nRound ");
-	ADD_TO_CONTEXT(context, &context_size, roundStr);
-	ADD_TO_CONTEXT(context, &context_size, " :\n");
+	add_context(context, &context_size, "\nRound ");
+	add_context(context, &context_size, roundStr);
+	add_context(context, &context_size, " :\n");
 
 	// MOCK RESPONSE
-	char* response = CREATE_MOCK_RESPONSE();
+	char* response = make_mock_response();
 	//printf("RESPONSE GOT %s", response);
 	
 	// parse response
 	char errorMessage[128] = "\0";
-	struct CmdSchema *schema = PARSE_JSON_RESPONSE(response, errorMessage);
+	struct CmdSchema *schema = parse_response_json(response, errorMessage);
 	if (schema && schema->success){
 		// add to history
 		if (schema->finished){
 			free_schema(schema);
 			if (depth >= task->minDepth){
-				ADD_TO_CONTEXT(context, &context_size, "Finished here");
+				add_context(context, &context_size, "Finished here");
 				return;
 			}else{
-				ADD_TO_CONTEXT(context, &context_size, "AI model tried to finish here, but the task minimum depth is bigger, see above\n");
+				add_context(context, &context_size, "AI model tried to finish here, but the task minimum depth is bigger, see above\n");
 			}
 		}else{
-			ADD_TO_CONTEXT(context, &context_size, "AI model executed: ");
-			ADD_TO_CONTEXT(context, &context_size, schema->command);
-			char* out = ENGINE_RUN_CMD(schema);
-			ADD_TO_CONTEXT(context, &context_size, "\nOutput: ");
-			ADD_TO_CONTEXT(context, &context_size, out);
+			add_context(context, &context_size, "AI model executed: ");
+			add_context(context, &context_size, schema->command);
+			char* out = run_cmd(schema);
+			add_context(context, &context_size, "\nOutput: ");
+			add_context(context, &context_size, out);
 			if(out)
 				free(out);
 			//context_size = ADD_TO_CONTEXT(context, context_size, response);
 		}
 	}else{
 		fprintf(stderr, "Error : %s", errorMessage);	
-		ADD_TO_CONTEXT(context, &context_size, "encounted an error : ");
-	 	ADD_TO_CONTEXT(context, &context_size, errorMessage);
+		add_context(context, &context_size, "encounted an error : ");
+	 	add_context(context, &context_size, errorMessage);
 	}
 
 	if (response) free(response);
 	free_schema(schema);
 
-	ENGINE_EXECUTE_STEP(task, context, context_size, depth + 1);
+	engine_execute_step(task, context, context_size, depth + 1);
 }
 
-struct Task *CREATE_MOCK_TASK(){
-	char *mock = "Create a user mission!\n\0";
-	struct Task *task = (struct Task*)malloc(sizeof(struct Task) + strlen(mock));
-
-	task->payload = (char*)malloc(strlen(mock));
-	memcpy(task->payload, mock, strlen(mock));
-	task->minDepth = 7;
-	task->maxDepth = 10;
-
-	printf("Task was generated\n");
-	printf("%s\n", task->payload);
-
-	return task;
-}
