@@ -1,4 +1,5 @@
 #include "engine.h"
+#include <stdlib.h>
 #include <string.h>
 #include "../utils.h"
 
@@ -7,10 +8,19 @@ static char* CREATE_MOCK_RESPONSE(){
 	char filename[128];
 	unsigned int file = rand();
 	file %= 4;
+	file = 0;
 
 	sprintf(filename,"/home/nita/dev/c/neural-network/mocks/action-data/%d.json",file);
 
 	return read_file(filename);
+}
+
+static struct CmdSchema *make_schema(){
+	struct CmdSchema *out = (struct CmdSchema*)malloc(sizeof(struct CmdSchema));
+	for (int i = 0; i < MAX_SCHEMA_PARAMS; ++i)
+		out->params[i] = NULL;
+
+	return out;
 }
 
 static void free_schema(struct CmdSchema *in){
@@ -92,35 +102,36 @@ char* ENGINE_BEGIN_TASK(struct Task *task, nodes_container *nodes, connections_c
 	return context;
 }
 
-static struct CmdSchema *PARSE_JSON_RESPONSE(char* response, char* errorMessage){
-	if (response == NULL){
+static struct CmdSchema *PARSE_JSON_RESPONSE(char* json, char* errorMessage){
+	// sanitize inputs
+	if (json == NULL){
 		strcpy(errorMessage, "Response is null!\n\0");
 		return NULL;
 	}
 
-	printf("Res len %zu\n", strlen(response));
-
-	char* cmd = strstr(response, "\"command\"");
-	char* fin = strstr(response, "\"finished\"");
+	char* cmd = strstr(json, "\"command\"");
+	char* fin = strstr(json, "\"finished\"");
 	if (!cmd && !fin){
 		strcpy(errorMessage, "Command not found!\n");
 		return NULL;
 	}
+	
+	// process task finalization
 	if (fin && strstr(fin+1, "true")){
-		printf("Finished mock\n");
-		struct CmdSchema *out = (struct CmdSchema*)malloc(sizeof(struct CmdSchema));
+		struct CmdSchema *out = make_schema();
 		out->finished = 1;
 		out->success = 1;
 		return out;
 	}
 
+	// search command (1,2,3)
 	char* num = searchFirstDigit(cmd + 1);
 	if (!num){
 		strcpy(errorMessage, "No command number found\n");
 		return NULL;
 	}
 
-	struct CmdSchema *out = (struct CmdSchema*)malloc(sizeof(struct CmdSchema));
+	struct CmdSchema *out = make_schema();
 
 	out->success = 1;
 	out->finished = 0;
@@ -129,11 +140,50 @@ static struct CmdSchema *PARSE_JSON_RESPONSE(char* response, char* errorMessage)
 		memcpy(out->command, num, 1);
 		out->command[1] = '\0';
 	}else{
-		strcpy(errorMessage, "Command is not in range, edit if you support more commands than 1,2,3\n");
+		strcpy(errorMessage, "Command is not in range, Commands are 1,2,3 + finished\n");
 		return NULL;
+	}
+
+	// ---------------- PROCESS COMMANDS
+	
+	// CASE 1
+	if (out->command[0] == '1'){
+		// procentage		
+		char* p = strstr(json, "percentage");
+		if (!p) {
+			strcpy(errorMessage, "Percentage parameter wasn't passed in command 1.\n");
+			return NULL;
+		}
+		char* s = searchFirstDigit(p+1);
+		if(!s){
+			strcpy(errorMessage, "Invalid procentage number (must be 1-100)\n");
+			return NULL;
+		}
+		char* f = searchFirstNonDigit(s+1) - 1;
+		if(!f){
+			strcpy(errorMessage, "Invalid procentage number (must be 1-100)\n");
+			return NULL;
+		}
+
+		size_t dist = f - s;
+		if (!dist) dist = 1;
+		if (dist > 5) dist = 5;
+
+		char buffer[5];
+		unsigned short *n = malloc(sizeof(short));
+		memcpy(buffer, s, dist);
+
+		*n = (unsigned short) atoi(buffer);
+		if (*n > 100) *n = 100;
+
+		out->params[0] = n;
 	}
 	
 	return out;
+}
+
+char* ENGINE_RUN_CMD(struct CmdSchema* cmd){
+	return "Hey";
 }
 
 void ENGINE_EXECUTE_STEP(struct Task *task, char* context, size_t context_size, unsigned short depth){
@@ -154,7 +204,6 @@ void ENGINE_EXECUTE_STEP(struct Task *task, char* context, size_t context_size, 
 	// parse response
 	char errorMessage[128] = "\0";
 	struct CmdSchema *schema = PARSE_JSON_RESPONSE(response, errorMessage);
-	
 	if (schema && schema->success){
 		// add to history
 		if (schema->finished){
@@ -168,6 +217,7 @@ void ENGINE_EXECUTE_STEP(struct Task *task, char* context, size_t context_size, 
 		}else{
 			context_size = ADD_TO_CONTEXT(context, context_size, "AI model executed: ");
 			context_size = ADD_TO_CONTEXT(context, context_size, schema->command);
+			ENGINE_RUN_CMD(schema);
 			//context_size = ADD_TO_CONTEXT(context, context_size, response);
 		}
 	}else{

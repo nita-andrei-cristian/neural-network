@@ -66,7 +66,7 @@ void MENU_START(){
 
 	//AI_RUN(ai, "I hate when collegues get better grades in coding competitions, I mus tbe better to impress my parents and be able to reproduce as a human. I fear the future.");
 	
-	SET_INCEPTION_GRAPH(nodes, connections, "/home/nita/dev/c/neural-network/inception/0.json");
+	//SET_INCEPTION_GRAPH(nodes, connections, "/home/nita/dev/c/neural-network/inception/0.json");
 
 	MENU_LOOP();
 	MENU_END();
