@@ -173,7 +173,7 @@ void MENU_LOOP(){
 		struct Task *task;
 		task = CREATE_MOCK_TASK();
 
-		char* output = ENGINE_BEGIN_TASK(task, nodes, connections);
+		char* output = ENGINE_BEGIN_TASK(task);
 
 		printf("AI said:\n%s\n", output);
 		

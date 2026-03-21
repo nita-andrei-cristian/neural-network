@@ -54,7 +54,7 @@ static inline size_t ADD_TO_CONTEXT(char* context, size_t size, char* target){
 	return new_capacity;
 }
 	
-char* ENGINE_BEGIN_TASK(struct Task *task, NodesContainer *nodes, ConnectionsContainer *connections){
+char* ENGINE_BEGIN_TASK(struct Task *task){
 	size_t context_size = INIT_CONTEXT_SIZE;
 	char* context = (char*)malloc(context_size);	
 	if (!context){
