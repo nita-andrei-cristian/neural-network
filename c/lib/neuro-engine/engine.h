@@ -135,14 +135,8 @@ struct Task{
 struct CmdSchema{
 	_Bool success;
 	_Bool finished;
-	int command;
-};
-
-struct Cmd1Schema{
-	_Bool success;
-	_Bool finished;
-	int command;
-	int procentage;
+	char command[4];
+	void *params[10]; // up to ten parameters
 };
 
 char* ENGINE_BEGIN_TASK(struct Task *task, nodes_container *nodes, connections_container *connections);

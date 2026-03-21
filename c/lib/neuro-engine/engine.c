@@ -84,7 +84,7 @@ char* ENGINE_BEGIN_TASK(struct Task *task, nodes_container *nodes, connections_c
 	return context;
 }
 
-static struct Cmd1Schema *PARSE_JSON_RESPONSE(char* response, char* errorMessage){
+static struct CmdSchema *PARSE_JSON_RESPONSE(char* response, char* errorMessage){
 	if (response == NULL){
 		strcpy(errorMessage, "Response is null!\n\0");
 		return NULL;
@@ -100,7 +100,7 @@ static struct Cmd1Schema *PARSE_JSON_RESPONSE(char* response, char* errorMessage
 	}
 	if (fin && strstr(fin+1, "true")){
 		printf("Finished mock\n");
-		struct Cmd1Schema *out = (struct Cmd1Schema*)malloc(sizeof(struct Cmd1Schema));
+		struct CmdSchema *out = (struct CmdSchema*)malloc(sizeof(struct CmdSchema));
 		out->finished = 1;
 		out->success = 1;
 		return out;
@@ -112,17 +112,18 @@ static struct Cmd1Schema *PARSE_JSON_RESPONSE(char* response, char* errorMessage
 		return NULL;
 	}
 
-	struct Cmd1Schema *out = (struct Cmd1Schema*)malloc(sizeof(struct Cmd1Schema));
+	struct CmdSchema *out = (struct CmdSchema*)malloc(sizeof(struct CmdSchema));
 
 	out->success = 1;
 	out->finished = 0;
 
-	int digit = atoi(num);
-	if (digit <= 0 || digit > 3){
+	if (num[0] == '1' || num[0] == '2' || num[0] == '3'){
+		memcpy(out->command, num, 1);
+		out->command[1] = '\0';
+	}else{
 		strcpy(errorMessage, "Command is not in range, edit if you support more commands than 1,2,3\n");
 		return NULL;
 	}
-	out->command = digit;
 	
 	return out;
 }
@@ -144,20 +145,22 @@ void ENGINE_EXECUTE_STEP(struct Task *task, char* context, size_t context_size, 
 	
 	// parse response
 	char errorMessage[128] = "\0";
-	struct Cmd1Schema *schema = PARSE_JSON_RESPONSE(response, errorMessage);
+	struct CmdSchema *schema = PARSE_JSON_RESPONSE(response, errorMessage);
 	
 	if (schema && schema->success){
 		// add to history
 		if (schema->finished){
 			if (depth >= task->minDepth){
-				ADD_TO_CONTEXT(context, context_size, "Finished here");
+				context_size = ADD_TO_CONTEXT(context, context_size, "Finished here");
 				free(schema);
 				return;
 			}else{
-				ADD_TO_CONTEXT(context, context_size, "AI model tried to finish here, but the task minimum depth is bigger, see above\n");
+				context_size = ADD_TO_CONTEXT(context, context_size, "AI model tried to finish here, but the task minimum depth is bigger, see above\n");
 			}
 		}else{
-			context_size = ADD_TO_CONTEXT(context, context_size, response);
+			context_size = ADD_TO_CONTEXT(context, context_size, "AI model executed: ");
+			context_size = ADD_TO_CONTEXT(context, context_size, schema->command);
+			//context_size = ADD_TO_CONTEXT(context, context_size, response);
 		}
 	}else{
 		fprintf(stderr, "Error : %s", errorMessage);	
