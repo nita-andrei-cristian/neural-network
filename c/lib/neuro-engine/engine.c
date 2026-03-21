@@ -13,6 +13,14 @@ static char* CREATE_MOCK_RESPONSE(){
 	return read_file(filename);
 }
 
+static void free_schema(struct CmdSchema *in){
+	if (!in) return;
+	for (int i = 0; i < MAX_SCHEMA_PARAMS; ++i)
+		if (in->params[i])
+			free(in->params[i]);
+	free(in);
+}
+
 static inline size_t ADD_TO_CONTEXT(char* context, size_t size, char* target){
 	if (target == NULL) return size;
 
@@ -150,9 +158,9 @@ void ENGINE_EXECUTE_STEP(struct Task *task, char* context, size_t context_size, 
 	if (schema && schema->success){
 		// add to history
 		if (schema->finished){
+			free_schema(schema);
 			if (depth >= task->minDepth){
 				context_size = ADD_TO_CONTEXT(context, context_size, "Finished here");
-				free(schema);
 				return;
 			}else{
 				context_size = ADD_TO_CONTEXT(context, context_size, "AI model tried to finish here, but the task minimum depth is bigger, see above\n");
@@ -169,7 +177,8 @@ void ENGINE_EXECUTE_STEP(struct Task *task, char* context, size_t context_size, 
 	}
 
 	if (response) free(response);
-	if (schema) free(schema);
+	free_schema(schema);
+
 	ENGINE_EXECUTE_STEP(task, context, context_size, depth + 1);
 }
 
