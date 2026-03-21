@@ -8,7 +8,7 @@
 
 typedef struct node {
 	char label[NODE_SIZE];	 // dynamic sizes yet to be implemented
-	bool dead;
+	_Bool dead;
 	long id;
 	size_t label_length;
 	double intensity;

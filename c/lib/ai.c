@@ -99,12 +99,12 @@ char* AI_RUN(AI* ai, char* message){
 
 
 	const int n_prompt = -llama_tokenize(ai->vocab, prompt, strlen(prompt),
-			NULL, 0, true, true);
+			NULL, 0, 1, 1);
 
 	// allocate space for the tokens and tokenize the prompt
 	llama_token* prompt_tokens = malloc(n_prompt * sizeof(llama_token));
 	if (llama_tokenize(ai->vocab, prompt, strlen(prompt), prompt_tokens,
-				n_prompt, true, true) < 0) {
+				n_prompt, 1, 1) < 0) {
 		fprintf(stderr, "Error: failed to tokenize the prompt: %s\n", __func__);
 		return "";
 	}

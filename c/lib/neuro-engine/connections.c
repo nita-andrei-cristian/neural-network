@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-connection* CONNECTIONS_ADD_FROM_IDS(connections_container *connections, nodes_container *nodes, long node1, long node2, bool decay){
+connection* CONNECTIONS_ADD_FROM_IDS(connections_container *connections, nodes_container *nodes, long node1, long node2, _Bool decay){
 	if(connections == NULL){
 		fprintf(stderr, "Error : Skipped adding connection because nodes_container is null.\n");
 		return NULL;
@@ -18,7 +18,7 @@ connection* CONNECTIONS_ADD_FROM_IDS(connections_container *connections, nodes_c
 		connection* tmp = connections->items;
 		connections->items = realloc(connections->items, connections->capacity * sizeof(*connections->items));
 		if (!connections->items){
-			printf("Error : Memory re-allocation failed. Will not store item [%d, %d]. \n", node1, node2);
+			printf("Error : Memory re-allocation failed. Will not store item [%ld, %ld]. \n", node1, node2);
 			connections->items = tmp;
 			return NULL;
 		} 
@@ -34,7 +34,7 @@ connection* CONNECTIONS_ADD_FROM_IDS(connections_container *connections, nodes_c
 	new->pnode1 = SEARCH_NODE_BY_ID(nodes, node1);
 	new->pnode2 = SEARCH_NODE_BY_ID(nodes, node2);
 	new->intensity = 1;
-	new->dead = false;
+	new->dead = 0;
 
 	connections->count++;
 
@@ -75,12 +75,12 @@ void CONNECTIONS_DECAY(connections_container *connections){
 			target->pnode2->intensity -= 0.05;
 
 		if (target->intensity <= 0.0){
-			target->dead = true;
+			target->dead = 1;
 
 			if (target->pnode1->intensity <= 0)
-				target->pnode1->dead = true;
+				target->pnode1->dead = 1;
 			if (target->pnode2->intensity <= 0)
-				target->pnode2->dead = true;
+				target->pnode2->dead = 1;
 
 			// kill respective nodes
 		}

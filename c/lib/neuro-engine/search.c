@@ -1,4 +1,7 @@
 #include "search.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 static inline void swap_double(double *a, double *b)
 {

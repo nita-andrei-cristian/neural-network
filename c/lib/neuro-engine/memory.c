@@ -1,7 +1,10 @@
 #include "memory.h"
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 // note : weird edge case when one of the nodes is actually called 'connections'
-bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *connections_data, char* response){
+_Bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *connections_data, char* response){
 	char *nodes = strstr(response, "\"nodes\"");
 	char *connections = strstr(response, "\"connections\"");
 
@@ -25,7 +28,7 @@ bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *
 	char *node_start;
 	char *node_end;
 	
-	while (true){
+	while (1){
 		node_start = strchr(nodes_start, '"');
 		node_end = strchr(node_start + 1, '"');
 		char buf[NODE_SIZE];
@@ -54,7 +57,7 @@ bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *
 	
 	char *token_start;
 	char *token_end;
-	bool shouldDecay = true;
+	_Bool shouldDecay = 1;
 	int i = 0;
 	
 	while (i <= 50){
@@ -93,7 +96,7 @@ bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *
 				connection *target = CONNECTIONS_SEARCH_BY_NODES(connections_data, node1->id, node2->id);
 				if (!target){
 					CONNECTIONS_ADD_FROM_IDS(connections_data, nodes_data, node1->id, node2->id, shouldDecay);
-					shouldDecay = false;
+					shouldDecay = 0;
 				}else{
 					target->intensity += 0.1;
 					if (target->pnode1)
@@ -177,7 +180,7 @@ void EXPORT_GRAPH(nodes_container* nodes, connections_container *connections, co
 	fptr = fopen(directory, "w");
 
 	// Write some text to the file
-	fprintf(fptr, output);
+	fprintf(fptr, "%s", output);
 
 	// Close the file
 	fclose(fptr); 
@@ -187,7 +190,7 @@ void EXPORT_GRAPH(nodes_container* nodes, connections_container *connections, co
      	free(output);
 };
 
-bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *connections_data, char* path){
+_Bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *connections_data, char* path){
 	char* response = read_file(path);
 	
 	char *nodes = strstr(response, "\"nodes\"");
@@ -213,7 +216,7 @@ bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *con
 	char *node_start;
 	char *node_end;
 	
-	while (true){
+	while (1){
 		node_start = strchr(nodes_start, '{');
 		if (!node_start) break;
 		node_end = strchr(node_start + 1, '}');
@@ -307,7 +310,7 @@ bool SET_INCEPTION_GRAPH(nodes_container *nodes_data, connections_container *con
 		buf3[third_element_end - third_element_start - 1 ]  = '\0';
 
 		if (node1 && node2){
-			connection* new = CONNECTIONS_ADD_FROM_IDS(connections_data, nodes_data, node1->id, node2->id, false);
+			connection* new = CONNECTIONS_ADD_FROM_IDS(connections_data, nodes_data, node1->id, node2->id, 0);
 			new->intensity = atod(buf3, strlen(buf3) - 1);
 		}
 

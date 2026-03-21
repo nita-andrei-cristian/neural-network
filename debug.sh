@@ -11,4 +11,4 @@ cd debug
 # This helps clang detect the file
 mv compile_commands.json ../compile_commands.json
 
-./neuralnetwork
+#./neuralnetwork

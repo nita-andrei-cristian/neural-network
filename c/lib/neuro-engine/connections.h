@@ -5,7 +5,7 @@
 #include "nodes.h"
 
 typedef struct connection {
-	bool dead;
+	_Bool dead;
 	long node1;
 	long node2;
 	double intensity;
@@ -19,7 +19,7 @@ typedef struct connections_container {
 	connection *items;
 } connections_container;
 
-connection* CONNECTIONS_ADD_FROM_IDS(connections_container *connections, nodes_container *nodes, long node1, long node2, bool shouldDecay);
+connection* CONNECTIONS_ADD_FROM_IDS(connections_container *connections, nodes_container *nodes, long node1, long node2, _Bool shouldDecay);
 
 void CONNECTIONS_FREE(connections_container* connections);
 

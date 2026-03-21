@@ -8,11 +8,10 @@ char* read_file(char* filename);
 
 #ifndef ADD_ITEMS_FROM_DATA_FUNC
 #define ADD_ITEMS_FROM_DATA_FUNC
-#include "./neuro-engine/core.h"
-#include <string.h>
-#include <stdlib.h>
+#include "./neuro-engine/nodes.h"
+#include "./neuro-engine/connections.h"
 
-bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *connections_data, char* response);
+_Bool ADD_DATA_FROM_RESPONSE(nodes_container *nodes_data, connections_container *connections_data, char* response);
 #endif
 
 #ifndef CONVERSION_FUNCTIONS

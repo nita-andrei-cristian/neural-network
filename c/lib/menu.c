@@ -1,23 +1,27 @@
-#include <menu.h>
-#include <utils.h>
-#include "./neuro-engine/core.h"
+#include "menu.h"
+#include "utils.h"
+#include "./neuro-engine/nodes.h"
+#include "./neuro-engine/connections.h"
+#include "./neuro-engine/search.h"
+#include "./neuro-engine/engine.h"
+#include "./neuro-engine/memory.h"
 #include <stdio.h>
 
 char* AI_RUN_MOCK()
 {
 	char filename[128];
-	int file = rand();
+	unsigned int file = rand();
 	if (file < 0) file *= -1;
 	file %= 5;
 	
-	sprintf(filename,"/home/nita/dev/c/neural-network/mocks/%d.txt",file);
+	sprintf(filename,"/home/nita/dev/c/neural-network/mocks/graph-data/%d.txt",file);
 	
 	return read_file(filename);
 }
 
 enum INPUT_TYPE PROCESS_INPUT(int recursive){
 	char input[2];
-	scanf("%c", &input);
+	scanf("%c", &input[0]);
 
 	input[1] = '\0';
 
@@ -70,13 +74,13 @@ void MENU_START(){
 
 void MENU_LOOP(){
 
-	printf(R"(
-[m] - write message
-[e] - export graph
-[0-4] - execute test
-[c] - clear
-[q] - quit
-)");
+	printf("\
+[m] - write message\n\
+[e] - export graph\n\
+[0-4] - execute test\n\
+[c] - clear\n\
+[q] - quit\n\
+");
 
 	enum INPUT_TYPE input = PROCESS_INPUT(0);
 
@@ -103,7 +107,6 @@ void MENU_LOOP(){
 		node** received = GET_IMPORTANT_NODES(nodes, 10, &out);
 		for (i = 0; i < out; i++){
 			printf("[%s], [%f]\n", received[i]->label, received[i]->intensity);
-
 		}
 		free(received);
 		printf("Test 0 ran!");
@@ -171,6 +174,17 @@ void MENU_LOOP(){
 		printf("Test 2 ran!");
 	}
 	if (input == TEST3){
+		printf("Creating AI Task (mock)...\n");
+		struct Task *task;
+		task = CREATE_MOCK_TASK();
+
+		char* output = ENGINE_BEGIN_TASK(task, nodes, connections);
+
+		printf("AI said:\n%s\n", output);
+		
+		free(task);
+		free(output);
+
 		printf("Test 3 ran!");
 	}
 	if (input == TEST4){

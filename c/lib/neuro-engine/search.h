@@ -1,10 +1,8 @@
 #ifndef NN_SEARCH_ENGINE
 #define NN_SEARCH_ENGINE
 
-#include <stdlib.h>
-#include <stdio.h>
 #include "nodes.h"
-#include "core.h"
+#include "connections.h"
 #include "../utils.h"
 
 node **GET_IMPORTANT_NODES(nodes_container *nodes, int threshold, int *out_count);
