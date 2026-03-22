@@ -1,7 +1,9 @@
-#include "engine.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "utils.h"
+#include "neuro-engine/engine.h"
 #include "neuro-engine/nodes.h"
 #include "neuro-engine/search.h"
 
@@ -18,13 +20,15 @@ static char* make_mock_response(){
 }
 
 struct Task *make_mock_task(){
-	char *mock = "Create a user mission!\n\0";
+	char *mock = "Create a user mission!\n";
 	struct Task *task = (struct Task*)malloc(sizeof(struct Task) + strlen(mock));
 
-	task->payload = (char*)malloc(strlen(mock));
-	memcpy(task->payload, mock, strlen(mock));
-	task->minDepth = 7;
-	task->maxDepth = 10;
+	size_t l = strlen(mock);
+	task->payload = (char*)malloc(l + 1);
+	memcpy(task->payload, mock, l);
+	task->payload[l] = '\0';
+	task->minDepth = 1;
+	task->maxDepth = 2;
 
 	printf("Task was generated\n");
 	printf("%s\n", task->payload);
@@ -75,33 +79,43 @@ static inline _Bool add_context(char** context, size_t *size, char* target){
 }
 
 static char* run_cmd(struct CmdSchema* cmd){
-	char* out = malloc(1000);
-	int percentage = *(int*)cmd->params[0];
-	out[0] = '\0';
-	strcat(out, "Nodes : Top ");
-	char buffP[16];
-	itoa(percentage, buffP);
+	if(!cmd) return NULL;
 
-	strcat(out, buffP);
-	strcat(out, "%\n");
-	sprintf(out, "Top %d/ percent nodes are:", percentage);
+	char* out = malloc(4048);
+	memset(out, ' ', 4048);
+
 	if (cmd->command[0] == '1' && cmd->params[0] != NULL){
+		const short percentage = *(short*)cmd->params[0];
+		char buffP[16];
+		itoa(percentage, buffP);
+
 		int size;
 		Node** received = GetNodes(percentage, &size);
+
+		sprintf(out, "Top %d percent nodes (%d / %zu) are:\n", percentage, size, nodes->count);
+		const int len = strlen(out);
 		for (int i = 0; i < size; i++){
+			if (!received[i]) continue;
 			char buff[32];
-			dtoa(received[i]->intensity, buff, 10);
-			strcat(out, received[i]->label);
-			strcat(out, " : (intensity) ");
-			strcat(out, buff);
-			strcat(out, "\n");
+			dtoa(received[i]->intensity, buff, 4);
+			// problematic
+			char data[128];
+			sprintf(data, "%s : %f\n", received[i]->label, received[i]->intensity);
+			strcat(out, data);
 		}
+		return out;
 	}
-	return out;
+
+	free(out);
+
+	return NULL;
+
 }
 
 	
 char* engine_start_task(struct Task *task){
+	if (!task || !task->payload) return NULL;
+
 	size_t context_size = INIT_CONTEXT_SIZE;
 	char* context = (char*)malloc(context_size);	
 	if (!context){
@@ -198,7 +212,7 @@ static struct CmdSchema *parse_response_json(char* json, char* errorMessage){
 			strcpy(errorMessage, "Invalid procentage number (must be 1-100)\n");
 			return NULL;
 		}
-		char* f = searchFirstNonDigit(s+1) - 1;
+		char* f = searchFirstNonDigit(s+1);
 		if(!f){
 			strcpy(errorMessage, "Invalid procentage number (must be 1-100)\n");
 			return NULL;
@@ -222,7 +236,6 @@ static struct CmdSchema *parse_response_json(char* json, char* errorMessage){
 }
 
 void engine_execute_step(struct Task *task, char* context, size_t context_size, unsigned short depth){
-
 	if (depth >= task->maxDepth) return;
 
 	char roundStr[4];
@@ -253,11 +266,12 @@ void engine_execute_step(struct Task *task, char* context, size_t context_size, 
 			add_context(&context, &context_size, "AI model executed: ");
 			add_context(&context, &context_size, schema->command);
 			char* out = run_cmd(schema);
-			add_context(&context, &context_size, "\nOutput: ");
-			add_context(&context, &context_size, out);
-			if(out)
-				free(out);
-			//context_size = ADD_TO_CONTEXT(context, context_size, response);
+			if (out){
+				add_context(&context, &context_size, "\nOutput: ");
+				add_context(&context, &context_size, out);
+				if(out)
+					free(out);
+			}
 		}
 	}else{
 		fprintf(stderr, "Error : %s", errorMessage);	

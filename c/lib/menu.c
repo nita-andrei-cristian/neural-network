@@ -6,6 +6,7 @@
 #include "./neuro-engine/engine.h"
 #include "./neuro-engine/memory.h"
 #include <stdio.h>
+#include <string.h>
 
 static char* make_ai_mock()
 {
@@ -140,7 +141,7 @@ void tick_menu(){
 		}
 		free(received);
 
-		printf("Test 1 ran!");
+		printf("Test 1 ran!\n");
 	}
 	if (input == TEST2){
 		int out, i;
@@ -166,24 +167,29 @@ void tick_menu(){
 		printf("Result:\n%s\n", received);
 		free(received);
 
-		printf("Test 2 ran!");
+		printf("Test 2 ran!\n");
 	}
 	if (input == TEST3){
 		printf("Creating AI Task (mock)...\n");
 		struct Task *task;
 		task = make_mock_task();
 
-		char* output = engine_start_task(task);
+		if (task && task->payload){
+			char* output = engine_start_task(task);
 
-		printf("AI said:\n%s\n", output);
-		
-		free(task);
-		free(output);
+			printf("size of output : %zu\n", strlen(output));
+			printf("AI said:\n%s\n", output);
 
-		printf("Test 3 ran!");
+			if (task)
+				free(task);
+			if (output)
+				free(output);
+
+			printf("Test 3 ran!\n");
+		}
 	}
 	if (input == TEST4){
-		printf("Test 4 ran!");
+		printf("Test 4 ran!\n");
 	}
 	if (input == CLEAR){
 		printf("\033[H\033[J");

@@ -195,7 +195,10 @@ void ExportGraphTo(const char* directory){
 };
 
 _Bool SetGraph(char* path){
+	init_connections();
+	init_nodes();
 	char* response = readFile(path);
+	if (!response) return 0;
 	
 	char *nodes_str = strstr(response, "\"nodes\"");
 	char *connections_str = strstr(response, "\"connections\"");
