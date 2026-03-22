@@ -38,7 +38,7 @@ char* searchFirstNonDigit(char *source){
 	return NULL;
 }
 
-char* read_file(char* filename)
+char* readFile(char* filename)
 {
 	FILE* f = fopen(filename, "rb");
 	if (!f) {

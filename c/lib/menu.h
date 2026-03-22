@@ -14,11 +14,11 @@ enum INPUT_TYPE {
 	CLEAR,
 };
 
-void MENU_START();
+void start_menu();
 
-void MENU_LOOP();
+void tick_menu();
 
-void MENU_END();
+void end_menu();
 
 
 #endif

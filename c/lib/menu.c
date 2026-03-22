@@ -7,7 +7,7 @@
 #include "./neuro-engine/memory.h"
 #include <stdio.h>
 
-char* AI_RUN_MOCK()
+static char* make_ai_mock()
 {
 	char filename[128];
 	unsigned int file = rand();
@@ -16,10 +16,10 @@ char* AI_RUN_MOCK()
 	
 	sprintf(filename,"/home/nita/dev/c/neural-network/mocks/graph-data/%d.txt",file);
 	
-	return read_file(filename);
+	return readFile(filename);
 }
 
-enum INPUT_TYPE PROCESS_INPUT(int recursive){
+static inline enum INPUT_TYPE read_input(int recursive){
 	char input[2];
 	scanf("%c", &input[0]);
 
@@ -45,12 +45,12 @@ enum INPUT_TYPE PROCESS_INPUT(int recursive){
 		return CLEAR;
 	
 	if (recursive < 100)
-		return PROCESS_INPUT(recursive++);
+		return read_input(recursive++);
 
 	return INPUT_ERROR;
 }
 
-void MENU_START(){
+void start_menu(){
 	
 	printf("Session Started...\n\n");
 
@@ -58,18 +58,18 @@ void MENU_START(){
 
 	//AI* ai = AI_NEW(0, TUPPLE_CREATE, path);
 
-	NODES_NEW();
-	CONNECTIONS_NEW();
+	init_nodes();
+	init_connections();
 
 	//AI_RUN(ai, "I hate when collegues get better grades in coding competitions, I mus tbe better to impress my parents and be able to reproduce as a human. I fear the future.");
 	
 	//SET_INCEPTION_GRAPH(nodes, connections, "/home/nita/dev/c/neural-network/inception/0.json");
 
-	MENU_LOOP();
-	MENU_END();
+	tick_menu();
+	end_menu();
 }
 
-void MENU_LOOP(){
+void tick_menu(){
 
 	printf("\
 [m] - write message\n\
@@ -79,7 +79,7 @@ void MENU_LOOP(){
 [q] - quit\n\
 ");
 
-	enum INPUT_TYPE input = PROCESS_INPUT(0);
+	enum INPUT_TYPE input = read_input(0);
 
 	if (input == MESSAGE){
 			char message[1024];
@@ -88,18 +88,18 @@ void MENU_LOOP(){
 			message[1023] = '\0';
 			printf("Sending message %s\n", message);
 			
-			char* response = AI_RUN_MOCK();
+			char* response = make_ai_mock();
 
-			ADD_DATA_FROM_RESPONSE(response);
+			UpdateGraphFromResponse(response);
 	}
 	if (input == EXPORT){
 		printf("\033[H\033[J");
 		printf("Export graph...\n\n");
-		EXPORT_GRAPH("/home/nita/dev/c/neural-network/js/graph.json");
+		ExportGraphTo("/home/nita/dev/c/neural-network/js/graph.json");
 	}
 	if (input == TEST0){
 		int out, i;
-		Node** received = GET_IMPORTANT_NODES(10, &out);
+		Node** received = GetNodes(10, &out);
 		for (i = 0; i < out; i++){
 			printf("[%s], [%f]\n", received[i]->label, received[i]->intensity);
 		}
@@ -110,7 +110,7 @@ void MENU_LOOP(){
 		int out, i;
 		if (nodes->count <= 0){
 			printf("Please introduce a new node before running test 1\n");
-			MENU_LOOP();
+			tick_menu();
 			return;
 		}
 		printf("Searching for most important node...\n");
@@ -124,7 +124,7 @@ void MENU_LOOP(){
 		}
 		printf("\n\nFound [%s]\n\n", most_important_node->label);
 	
-		Node** received = GET_IMPORTANT_NEIGHBOURS(most_important_node->id, 100, &out);
+		Node** received = GetNodeNeighbours(most_important_node->id, 100, &out);
 		printf("Finding neighbours...\n");
 		
 		for (i = 0; i < out; i++){
@@ -132,7 +132,7 @@ void MENU_LOOP(){
 		}
 		free(received);
 
-		received = GET_IMPORTANT_NEIGHBOURS(most_important_node->id, 50, &out);
+		received = GetNodeNeighbours(most_important_node->id, 50, &out);
 		printf("Finding top 50*/* neighbours...\n");
 		
 		for (i = 0; i < out; i++){
@@ -146,7 +146,7 @@ void MENU_LOOP(){
 		int out, i;
 		if (nodes->count <= 0){
 			printf("Please introduce a new node before running test 2\n");
-			MENU_LOOP();
+			tick_menu();
 			return;
 		}
 		printf("Searching for most important node...\n");
@@ -160,7 +160,7 @@ void MENU_LOOP(){
 		}
 		printf("\n\nFound [%s]\n\n", most_important_node->label);
 	
-		char* received = COMPUTE_IMPORTANT_NEIGHBOURS_RECURSIVE(most_important_node, 100, 2, &out);
+		char* received = ComputeNodeFamily(most_important_node, 100, 2, &out);
 		printf("Finding neighbours...\n");
 		
 		printf("Result:\n%s\n", received);
@@ -171,9 +171,9 @@ void MENU_LOOP(){
 	if (input == TEST3){
 		printf("Creating AI Task (mock)...\n");
 		struct Task *task;
-		task = CREATE_MOCK_TASK();
+		task = make_mock_task();
 
-		char* output = ENGINE_BEGIN_TASK(task);
+		char* output = engine_start_task(task);
 
 		printf("AI said:\n%s\n", output);
 		
@@ -192,13 +192,13 @@ void MENU_LOOP(){
 		return;
 	}
 
-	MENU_LOOP();
+	tick_menu();
 }
 
-void MENU_END(){
+void end_menu(){
 	printf("Session ended.\n");
 
-	NODES_FREE();
-	CONNECTIONS_FREE();
+	free_nodes();
+	free_connections();
 	//AI_FREE(ai);
 }

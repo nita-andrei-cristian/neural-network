@@ -21,16 +21,16 @@ typedef struct NodesContainer {
 
 struct NodesContainer* nodes; 
 
-Node* NODES_ADD(const char *label, size_t label_length);
+Node* NewNode(const char *label, size_t label_length);
 
-Node* NODES_READ(size_t i);
+Node* ReadNode(size_t i);
 
-void NODES_NEW();
-void NODES_FREE();
+void init_nodes();
+void free_nodes();
 
-Node* SEARCH_NODE_BY_ID(long id);
+Node* SearchNodeID(long id);
 
-Node* SEARCH_NODE_BY_LABEL(const char* label);
+Node* SearchNodeLabel(const char* label);
 
 
 #endif

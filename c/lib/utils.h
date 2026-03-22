@@ -3,7 +3,7 @@
 #endif
 
 #ifndef READ_FILE_FUNC
-char* read_file(char* filename);
+char* readFile(char* filename);
 #endif
 
 #ifndef CONVERSION_FUNCTIONS

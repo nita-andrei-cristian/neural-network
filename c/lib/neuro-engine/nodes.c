@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-Node* NODES_ADD(const char *label, size_t label_length){
+Node* NewNode(const char *label, size_t label_length){
 	if(nodes == NULL){
 		fprintf(stderr, "Error : Skipped adding node because node conontainer is null.\n");
 		return NULL;
@@ -42,7 +42,7 @@ Node* NODES_ADD(const char *label, size_t label_length){
 	return &nodes->items[i];
 }
 
-Node* NODES_READ(size_t i){
+Node* ReadNode(size_t i){
 	if (!nodes){
 		fprintf(stderr, "Error : nodes is NULL.\n");
 		return NULL;
@@ -54,7 +54,7 @@ Node* NODES_READ(size_t i){
 	return &nodes->items[i];
 }
 
-void NODES_FREE(){
+void free_nodes(){
 	if (!nodes) return;
 	if (nodes->items)
 		free(nodes->items);
@@ -62,8 +62,8 @@ void NODES_FREE(){
 	nodes = NULL;
 }
 
-void NODES_NEW(){
-	NODES_FREE();
+void init_nodes(){
+	free_nodes();
 	nodes =  malloc(sizeof(NodesContainer));
 	if(!nodes){
 		fprintf(stderr, "Error : Malloc failed, couldn't create nodes \n");
@@ -73,7 +73,7 @@ void NODES_NEW(){
 }
 
 
-Node* SEARCH_NODE_BY_ID(long target_id){
+Node* SearchNodeID(long target_id){
 	for (int i = 0; i < nodes->count; i++){
 		if (nodes->items[i].id == target_id){
 			return &nodes->items[i];
@@ -82,7 +82,7 @@ Node* SEARCH_NODE_BY_ID(long target_id){
 	return NULL;
 }
 
-Node* SEARCH_NODE_BY_LABEL(const char* label){
+Node* SearchNodeLabel(const char* label){
 	for (int i = 0; i < nodes->count; i++){
 		if (strcmp(nodes->items[i].label, label)== 0){
 			return &nodes->items[i];

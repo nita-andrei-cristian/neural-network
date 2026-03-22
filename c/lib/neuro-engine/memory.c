@@ -8,7 +8,7 @@
 #include "connections.h"
 
 // note : weird edge case when one of the nodes is actually called 'connections'
-_Bool ADD_DATA_FROM_RESPONSE(char* response){
+_Bool UpdateGraphFromResponse(char* response){
 	char *nodes = strstr(response, "\"nodes\"");
 	char *connections = strstr(response, "\"connections\"");
 
@@ -45,8 +45,8 @@ _Bool ADD_DATA_FROM_RESPONSE(char* response){
 		if (node_start >= nodes_end) break;
 		if (!node_start || !node_end) break;
 	
-		if (!SEARCH_NODE_BY_LABEL(buf)){
-			NODES_ADD(buf, len);
+		if (!SearchNodeLabel(buf)){
+			NewNode(buf, len);
 		}
 
 		nodes_start = node_end + 1;
@@ -89,17 +89,17 @@ _Bool ADD_DATA_FROM_RESPONSE(char* response){
 			memcpy(buf1, first_element_start+1, first_element_end - first_element_start - 1);
 			buf1[first_element_end - first_element_start - 1]  = '\0';
 
-			Node* node1 = SEARCH_NODE_BY_LABEL(buf1);
+			Node* node1 = SearchNodeLabel(buf1);
 			memcpy(buf2, second_element_start+1, second_element_end - second_element_start - 1);
 			buf2[second_element_end - second_element_start - 1]  = '\0';
 
-			Node* node2 = SEARCH_NODE_BY_LABEL(buf2);
+			Node* node2 = SearchNodeLabel(buf2);
 
 			if (node1 && node2){
 				//printf("[%p] and [%p]\n", node1, node2);
-				Connection *target = CONNECTIONS_SEARCH_BY_NODES(node1->id, node2->id);
+				Connection *target = findConnection(node1->id, node2->id);
 				if (!target){
-					CONNECTIONS_ADD_FROM_IDS(node1->id, node2->id, shouldDecay);
+					AddConnectionFromIDs(node1->id, node2->id, shouldDecay);
 					shouldDecay = 0;
 				}else{
 					target->intensity += 0.1;
@@ -120,7 +120,7 @@ _Bool ADD_DATA_FROM_RESPONSE(char* response){
 	return 1;
 }
 
-void EXPORT_GRAPH(const char* directory){
+void ExportGraphTo(const char* directory){
 
 	// shity size estimation
 	int size = (nodes->count * sizeof(Node) + connections->count * sizeof(Connection)) * 1.2 + 128;
@@ -194,8 +194,8 @@ void EXPORT_GRAPH(const char* directory){
      	free(output);
 };
 
-_Bool SET_INCEPTION_GRAPH(char* path){
-	char* response = read_file(path);
+_Bool SetGraph(char* path){
+	char* response = readFile(path);
 	
 	char *nodes_str = strstr(response, "\"nodes\"");
 	char *connections_str = strstr(response, "\"connections\"");
@@ -253,8 +253,8 @@ _Bool SET_INCEPTION_GRAPH(char* path){
 		memcpy(id_data, id_start, len);
 		id_data[len] = '\0';
 
-		if (!SEARCH_NODE_BY_LABEL(label_data)){
-			Node* new = NODES_ADD(label_data, label_end - label_start - 1);
+		if (!SearchNodeLabel(label_data)){
+			Node* new = NewNode(label_data, label_end - label_start - 1);
 			new->id = atol(id_data);
 		}
 
@@ -304,17 +304,17 @@ _Bool SET_INCEPTION_GRAPH(char* path){
 
 		memcpy(buf1, first_element_start, first_element_end - first_element_start);
 		buf1[first_element_end - first_element_start]  = '\0';
-		Node* node1 = SEARCH_NODE_BY_ID(atol(buf1));
+		Node* node1 = SearchNodeID(atol(buf1));
 
 		memcpy(buf2, second_element_start, second_element_end - second_element_start);
 		buf2[second_element_end - second_element_start ]  = '\0';
-		Node* node2 = SEARCH_NODE_BY_ID(atol(buf2));
+		Node* node2 = SearchNodeID(atol(buf2));
 
 		memcpy(buf3, third_element_start+1, third_element_end - third_element_start - 1);
 		buf3[third_element_end - third_element_start - 1 ]  = '\0';
 
 		if (node1 && node2){
-			Connection* new = CONNECTIONS_ADD_FROM_IDS(node1->id, node2->id, 0);
+			Connection* new = AddConnectionFromIDs(node1->id, node2->id, 0);
 			new->intensity = atod(buf3, strlen(buf3) - 1);
 		}
 

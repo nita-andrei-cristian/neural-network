@@ -14,7 +14,7 @@ static char* make_mock_response(){
 
 	sprintf(filename,"/home/nita/dev/c/neural-network/mocks/action-data/%d.json",file);
 
-	return read_file(filename);
+	return readFile(filename);
 }
 
 struct Task *make_mock_task(){
@@ -48,25 +48,30 @@ static void free_schema(struct CmdSchema *in){
 	free(in);
 }
 
-static inline void add_context(char* context, size_t *size, char* target){
-	if (target == NULL) return;
+static inline _Bool add_context(char** context, size_t *size, char* target){
+	if (target == NULL || context == NULL || *context == NULL) return 0 ; 
 
-	size_t sum = strlen(context) + strlen(target);
-	size_t new_capacity = *size * 2;
-	if (sum >= *size){
-		char* tmp = context;
-		while (new_capacity <= sum){
+	size_t used = strlen(*context);
+	size_t needed = used + strlen(target) + 1;
+	if (needed >= *size){
+		size_t new_capacity = *size;
+		while (new_capacity <= needed)
 			new_capacity *= 2;
-		}
-		context = (char*)realloc(context, new_capacity);
-		
-		if (!context){
+
+		char* tmp = (char*)realloc(*context, new_capacity);
+
+		if (!tmp){
 			fprintf(stderr, "Couldn't allocate memory for context, current size : [%zu], target size : [%zu]\n", *size, new_capacity);
-			context = tmp;
-			return;
+			return 0;
 		}
+
+		*size = new_capacity;
+		*context = tmp;
+		
 	}
-	strcat(context, target);
+
+	memcpy(*context + used, target, strlen(target) + 1);
+	return 1;
 }
 
 static char* run_cmd(struct CmdSchema* cmd){
@@ -82,7 +87,7 @@ static char* run_cmd(struct CmdSchema* cmd){
 	sprintf(out, "Top %d/ percent nodes are:", percentage);
 	if (cmd->command[0] == '1' && cmd->params[0] != NULL){
 		int size;
-		Node** received = GET_IMPORTANT_NODES(percentage, &size);
+		Node** received = GetNodes(percentage, &size);
 		for (int i = 0; i < size; i++){
 			char buff[32];
 			dtoa(received[i]->intensity, buff, 10);
@@ -127,9 +132,9 @@ char* engine_start_task(struct Task *task){
 	strcat(task_data, nConnections);
 	strcat(task_data, " connections.\n\n");
 		
-	add_context(context, &context_size, task_data);
-	add_context(context, &context_size, startpoint);
-	add_context(context, &context_size, "\nYOUR COMMAND HISTORY:\n");
+	add_context(&context, &context_size, task_data);
+	add_context(&context, &context_size, startpoint);
+	add_context(&context, &context_size, "\nYOUR COMMAND HISTORY:\n");
 
 	engine_execute_step(task, context, INIT_CONTEXT_SIZE, 0);
 
@@ -223,9 +228,9 @@ void engine_execute_step(struct Task *task, char* context, size_t context_size, 
 	char roundStr[4];
 	itoa(depth, roundStr);
 
-	add_context(context, &context_size, "\nRound ");
-	add_context(context, &context_size, roundStr);
-	add_context(context, &context_size, " :\n");
+	add_context(&context, &context_size, "\nRound ");
+	add_context(&context, &context_size, roundStr);
+	add_context(&context, &context_size, " :\n");
 
 	// MOCK RESPONSE
 	char* response = make_mock_response();
@@ -239,25 +244,25 @@ void engine_execute_step(struct Task *task, char* context, size_t context_size, 
 		if (schema->finished){
 			free_schema(schema);
 			if (depth >= task->minDepth){
-				add_context(context, &context_size, "Finished here");
+				add_context(&context, &context_size, "Finished here");
 				return;
 			}else{
-				add_context(context, &context_size, "AI model tried to finish here, but the task minimum depth is bigger, see above\n");
+				add_context(&context, &context_size, "AI model tried to finish here, but the task minimum depth is bigger, see above\n");
 			}
 		}else{
-			add_context(context, &context_size, "AI model executed: ");
-			add_context(context, &context_size, schema->command);
+			add_context(&context, &context_size, "AI model executed: ");
+			add_context(&context, &context_size, schema->command);
 			char* out = run_cmd(schema);
-			add_context(context, &context_size, "\nOutput: ");
-			add_context(context, &context_size, out);
+			add_context(&context, &context_size, "\nOutput: ");
+			add_context(&context, &context_size, out);
 			if(out)
 				free(out);
 			//context_size = ADD_TO_CONTEXT(context, context_size, response);
 		}
 	}else{
 		fprintf(stderr, "Error : %s", errorMessage);	
-		add_context(context, &context_size, "encounted an error : ");
-	 	add_context(context, &context_size, errorMessage);
+		add_context(&context, &context_size, "encounted an error : ");
+	 	add_context(&context, &context_size, errorMessage);
 	}
 
 	if (response) free(response);

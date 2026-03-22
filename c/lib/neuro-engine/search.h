@@ -4,8 +4,13 @@
 #include "nodes.h"
 #include "../utils.h"
 
-Node **GET_IMPORTANT_NODES(int threshold, int *out_count);
-Node **GET_IMPORTANT_NEIGHBOURS(long node_id, int threshold, int *count);
-char *COMPUTE_IMPORTANT_NEIGHBOURS_RECURSIVE(Node* root, int percent, int recursive, int *count);
+/* Filters globally nodes based on a threshold 1-100  */
+Node **GetNodes(int threshold, int *out_count);
+
+/* Filters neighbour nodes based on a threshold 1-100  */
+Node **GetNodeNeighbours(long node_id, int threshold, int *count);
+
+/* Filters neighbour nodes based on a threshold 1-100 but recursively  */
+char *ComputeNodeFamily(Node* root, int threshold, int depth, int *count);
 
 #endif

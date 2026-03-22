@@ -21,14 +21,14 @@ typedef struct connections_container {
 
 ConnectionsContainer* connections;
 
-Connection* CONNECTIONS_ADD_FROM_IDS(long node1, long node2, _Bool shouldDecay);
+Connection* AddConnectionFromIDs(long node1, long node2, _Bool shouldDecay);
 
-void CONNECTIONS_NEW();
-void CONNECTIONS_FREE();
+void init_connections();
+void free_connections();
 
-void CONNECTIONS_DECAY();
+void DecayConnections();
 
-Connection* CONNECTIONS_SEARCH_BY_NODES(long node1, long node2);
+Connection* findConnection(long node1, long node2);
 
 
 #endif 

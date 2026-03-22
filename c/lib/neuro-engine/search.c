@@ -54,7 +54,7 @@ static inline int top_count_percent(int total, int percent)
     return (total * percent + 99) / 100;
 }
 
-Node **GET_IMPORTANT_NODES(int percent, int *out_count){
+Node **GetNodes(int percent, int *out_count){
 	if (out_count)
 		*out_count = 0;
 
@@ -124,7 +124,7 @@ static Node** GET_NEIGHBOURS(ConnectionsContainer *connections, long node_id, in
 	return (Node**)found;
 }
 
-Node** GET_IMPORTANT_NEIGHBOURS(long node_id, int percent, int *count){
+Node** GetNodeNeighbours(long node_id, int percent, int *count){
 	Node** found;
 
 	if (count)
@@ -180,7 +180,7 @@ Node** GET_IMPORTANT_NEIGHBOURS(long node_id, int percent, int *count){
 static void recursive_call_neighbours(ConnectionsContainer *connections, char* result, Node* root, int percent, int depth){
 	int count;
 	Node** found;
-	found = GET_IMPORTANT_NEIGHBOURS(root->id, percent, &count);
+	found = GetNodeNeighbours(root->id, percent, &count);
 
 	strcat(result, "[Name: \"");
 	strcat(result, root->label);
@@ -204,7 +204,7 @@ static void recursive_call_neighbours(ConnectionsContainer *connections, char* r
 	free(found);
  }
 
-char* COMPUTE_IMPORTANT_NEIGHBOURS_RECURSIVE(Node *root, int percent, int recursive, int *count){
+char* ComputeNodeFamily(Node *root, int percent, int recursive, int *count){
 	
 	if (recursive > 5) recursive = 5;
 	if (recursive < 1) recursive = 1;
